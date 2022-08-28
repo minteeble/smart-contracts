@@ -47,6 +47,39 @@ contract MinteebleERC721A is MinteeblePartialERC721, ERC721A, ReentrancyGuard {
     }
 
     /**
+     *  @inheritdoc ERC721A
+     */
+    function _startTokenId() internal view virtual override returns (uint256) {
+        return 1;
+    }
+
+    /**
+     *  @inheritdoc ERC721A
+     */
+    function _baseURI() internal view override returns (string memory) {
+        return baseUri;
+    }
+
+    /**
+     *  @inheritdoc ERC721A
+     */
+    function tokenURI(uint256 _tokenId)
+        public
+        view
+        virtual
+        override
+        returns (string memory)
+    {
+        require(_exists(_tokenId), "Token ID does not exist.");
+
+        // Checks if collection is revealed
+        if (revealed) return preRevealUri;
+
+        // Evaluating full URI for the specified ID
+        return string.concat(_baseURI(), _tokenId.toString(), uriSuffix);
+    }
+
+    /**
      *  @notice Mints one or more items
      */
     function mint(uint256 _mintAmount)

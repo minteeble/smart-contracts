@@ -60,20 +60,20 @@ contract MinteebleERC721 is ERC721Enumerable, MinteeblePartialERC721 {
     /**
      *  @inheritdoc ERC721
      */
-    function tokenURI(uint256 tokenId)
+    function tokenURI(uint256 _tokenId)
         public
         view
         virtual
         override
         returns (string memory)
     {
-        _requireMinted(tokenId);
+        _requireMinted(_tokenId);
 
         // Checks if collection is revealed
         if (revealed) return preRevealUri;
 
         // Evaluating full URI for the specified ID
-        return string.concat(_baseURI(), tokenId.toString(), uriSuffix);
+        return string.concat(_baseURI(), _tokenId.toString(), uriSuffix);
     }
 
     /**
