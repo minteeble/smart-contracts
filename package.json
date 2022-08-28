@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "license": "MIT",
   "author": "Samuele Girgenti <samuele.girgenti458@gmail.com>",
+  "repository": "https://github.com/minteeble/smart-contracts.git",
   "scripts": {
     "verify-testnet": "hardhat verify --constructor-args arguments.js --network testnet",
     "verify-mainnet": "hardhat verify --constructor-args arguments.js --network mainnet"
