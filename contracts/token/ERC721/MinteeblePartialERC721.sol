@@ -23,7 +23,6 @@ abstract contract MinteeblePartialERC721 is Ownable {
     string public baseUri = "";
     string public uriSuffix = ".json";
     string public preRevealUri = "";
-
     bool public revealed = false;
 
     /**
