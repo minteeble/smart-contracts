@@ -26,9 +26,6 @@ jobs:
         with:
           cmd: install
 
-      - name: Building package
-        run: yarn build
-
       - name: Publish if version has been updated
         uses: pascalgn/npm-publish-action@1.3.9
         with:
