@@ -43,6 +43,10 @@ contract TokenSeller is Ownable {
         tokenAddress = _tokenAddress;
     }
 
+    function setTokenPrice(uint256 _tokenPrice) public onlyOwner {
+        tokenPrice = _tokenPrice;
+    }
+
     function setTokenAddress(address _tokenAddress) public onlyOwner {
         tokenAddress = _tokenAddress;
     }
