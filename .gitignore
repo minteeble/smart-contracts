@@ -3,3 +3,4 @@ cache
 artifacts
 *.log
 .DS_STORE
+#.env
