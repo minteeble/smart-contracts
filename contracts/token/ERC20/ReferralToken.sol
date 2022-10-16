@@ -26,11 +26,23 @@ interface IERC20 {
     function balanceOf(address account) external view returns (uint256);
 }
 
-contract TokenSeller is Ownable {
+contract ReferralToken is Ownable {
+    struct Level {
+        uint256 percentage;
+    }
+
+    struct Rank {
+        uint256 maxLevel;
+        string rankName;
+    }
+
     uint256 public tokenPrice = 0;
     address public walletAddress = address(0);
     address public tokenAddress = address(0);
     uint256 public allowance = 0;
+
+    Level[] private levels;
+    Rank[] private ranks;
 
     event ReceivedERC20Token(
         address token_address,
@@ -82,5 +94,46 @@ contract TokenSeller is Ownable {
             ""
         );
         require(success);
+    }
+
+    function getLevels() public view returns (Level[] memory) {
+        return levels;
+    }
+
+    function addLevel(uint256 _percentage) public {
+        levels.push(Level(_percentage));
+    }
+
+    function editLevel(uint256 _levelIndex, uint256 _percentage) public {
+        require(levels.length > _levelIndex, "Level not found");
+
+        levels[_levelIndex].percentage = _percentage;
+    }
+
+    function removeLevel() public {
+        require(levels.length > 0, "No levels available");
+
+        levels.pop();
+    }
+
+    function addRank(uint256 _maxLevel, string memory _rankName) public {
+        ranks.push(Rank(_maxLevel, _rankName));
+    }
+
+    function editRank(
+        uint256 _rankIndex,
+        uint256 _maxLevel,
+        string memory _rankName
+    ) public {
+        require(ranks.length > _rankIndex, "Rank not found");
+
+        ranks[_rankIndex].maxLevel = _maxLevel;
+        ranks[_rankIndex].rankName = _rankName;
+    }
+
+    function removeRank() public {
+        require(ranks.length > 0, "No ranks available");
+
+        ranks.pop();
     }
 }
