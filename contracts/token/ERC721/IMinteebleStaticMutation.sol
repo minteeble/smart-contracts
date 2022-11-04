@@ -26,7 +26,7 @@ pragma solidity ^0.8.14;
 /// @title Base interface for implementing the Minteeble static mutation
 interface IMinteebleStaticMutation {
     /// @notice Determines the list of IDs the address owns on the old collection
-    /// @dev function used for determining the pairing with the old collection.
+    /// @dev Function used for determining the pairing with the old collection.
     /// Basic ERC721 does not support by default a this feature
     /// @param owner The wallet address to be checked
     /// @return List of items owned in the base collection
@@ -34,4 +34,9 @@ interface IMinteebleStaticMutation {
         external
         view
         returns (uint256[] memory);
+
+    /// @notice Determines the mapping between IDs from new collection and IDs fron the old one
+    /// @param _newId ID from the new collection
+    /// @return ID from the old collection
+    function oldCollectionId(uint256 _newId) external view returns (uint256);
 }
