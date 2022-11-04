@@ -12,6 +12,8 @@ pragma solidity ^0.8.14;
 //
 //  =============================================
 
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+
 /**
  *  Minteebke Static Mutation.
  *  -- HOW DOES IT WORK --
@@ -24,7 +26,7 @@ pragma solidity ^0.8.14;
  */
 
 /// @title Base interface for implementing the Minteeble static mutation
-interface IMinteebleStaticMutation {
+interface IMinteebleStaticMutation is IERC721 {
     /// @notice Determines the list of IDs the address owns on the old collection
     /// @dev Function used for determining the pairing with the old collection.
     /// Basic ERC721 does not support by default a this feature
