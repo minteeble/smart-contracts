@@ -82,6 +82,7 @@ contract MinteebleERC721 is ERC721Enumerable, MinteeblePartialERC721 {
     function mint(uint256 _mintAmount)
         public
         payable
+        virtual
         canMint(_mintAmount)
         enoughFunds(_mintAmount)
     {
