@@ -85,6 +85,7 @@ contract MinteebleERC721A is MinteeblePartialERC721, ERC721A, ReentrancyGuard {
     function mint(uint256 _mintAmount)
         public
         payable
+        virtual
         canMint(_mintAmount)
         enoughFunds(_mintAmount)
     {
