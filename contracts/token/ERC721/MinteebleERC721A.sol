@@ -91,4 +91,36 @@ contract MinteebleERC721A is MinteeblePartialERC721, ERC721A, ReentrancyGuard {
     {
         _safeMint(_msgSender(), _mintAmount);
     }
+
+    function walletOfOwner(address _owner)
+        public
+        view
+        returns (uint256[] memory)
+    {
+        uint256 ownerTokenCount = balanceOf(_owner);
+        uint256[] memory ownedTokenIds = new uint256[](ownerTokenCount);
+        uint256 currentTokenId = _startTokenId();
+        uint256 ownedTokenIndex = 0;
+        address latestOwnerAddress;
+
+        while (
+            ownedTokenIndex < ownerTokenCount && currentTokenId <= maxSupply
+        ) {
+            TokenOwnership memory ownership = _ownershipOf(currentTokenId);
+
+            if (!ownership.burned && ownership.addr != address(0)) {
+                latestOwnerAddress = ownership.addr;
+            }
+
+            if (latestOwnerAddress == _owner) {
+                ownedTokenIds[ownedTokenIndex] = currentTokenId;
+
+                ownedTokenIndex++;
+            }
+
+            currentTokenId++;
+        }
+
+        return ownedTokenIds;
+    }
 }
