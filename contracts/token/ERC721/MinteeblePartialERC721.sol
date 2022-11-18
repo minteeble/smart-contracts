@@ -24,12 +24,18 @@ abstract contract MinteeblePartialERC721 is Ownable {
     string public uriSuffix = ".json";
     string public preRevealUri = "";
     bool public revealed = false;
+    bool public paused = true;
 
     /**
      *  @dev Checks if caller provided enough funds for minting
      */
     modifier enoughFunds(uint256 _mintAmount) {
         require(msg.value >= _mintAmount * mintPrice, "Insufficient funds!");
+        _;
+    }
+
+    modifier active() {
+        require(!paused, "Contract is paused.");
         _;
     }
 
@@ -55,6 +61,14 @@ abstract contract MinteeblePartialERC721 is Ownable {
      */
     function setRevealed(bool _revealed) public onlyOwner {
         revealed = _revealed;
+    }
+
+    /**
+     * @notice Change paused state
+     * @param _paused Paused state
+     */
+    function setPaused(bool _paused) public onlyOwner {
+        paused = _paused;
     }
 
     /**

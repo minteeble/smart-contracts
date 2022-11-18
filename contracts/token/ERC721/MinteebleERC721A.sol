@@ -88,6 +88,7 @@ contract MinteebleERC721A is MinteeblePartialERC721, ERC721A, ReentrancyGuard {
         virtual
         canMint(_mintAmount)
         enoughFunds(_mintAmount)
+        active
     {
         _safeMint(_msgSender(), _mintAmount);
     }
