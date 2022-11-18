@@ -93,6 +93,17 @@ contract MinteebleERC721A is MinteeblePartialERC721, ERC721A, ReentrancyGuard {
         _safeMint(_msgSender(), _mintAmount);
     }
 
+    /**
+     * @notice Mints item for another address. (Reserved to contract owner)
+     */
+    function mintForAddress(uint256 _mintAmount, address _receiver)
+        public
+        canMint(_mintAmount)
+        onlyOwner
+    {
+        _safeMint(_receiver, _mintAmount);
+    }
+
     function walletOfOwner(address _owner)
         public
         view
