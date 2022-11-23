@@ -26,6 +26,10 @@ abstract contract MinteeblePartialERC721 is Ownable {
     bool public revealed = false;
     bool public paused = true;
 
+    uint256 public maxMintAmountPerTrx = 5;
+    uint256 public maxMintAmountPerAddress = 20;
+    mapping(address => uint256) public totalMintedByAddress;
+
     /**
      *  @dev Checks if caller provided enough funds for minting
      */
@@ -85,6 +89,22 @@ abstract contract MinteeblePartialERC721 is Ownable {
      */
     function setMintPrice(uint256 _mintPrice) public onlyOwner {
         mintPrice = _mintPrice;
+    }
+
+    /**
+     *  @notice Allows owner to set the max number of mintable items in a single transaction
+     *  @param _maxAmount Max amount
+     */
+    function setMaxMintAmountPerTrx(uint256 _maxAmount) public onlyOwner {
+        maxMintAmountPerTrx = _maxAmount;
+    }
+
+    /**
+     *  @notice Allows owner to set the max number of items mintable per wallet
+     *  @param _maxAmount Max amount
+     */
+    function setMaxMintAmountPerAddress(uint256 _maxAmount) public onlyOwner {
+        maxMintAmountPerAddress = _maxAmount;
     }
 
     /**

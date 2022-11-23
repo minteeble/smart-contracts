@@ -43,6 +43,15 @@ contract MinteebleERC721A is MinteeblePartialERC721, ERC721A, ReentrancyGuard {
      */
     modifier canMint(uint256 _mintAmount) {
         require(totalSupply() + _mintAmount <= maxSupply, "Max supply exceed!");
+        require(
+            _mintAmount < maxMintAmountPerTrx,
+            "Exceeded maximum total amount per trx!"
+        );
+        require(
+            totalMintedByAddress[msg.sender] + _mintAmount <=
+                maxMintAmountPerAddress,
+            "Exceeded maximum total amount per address!"
+        );
         _;
     }
 
