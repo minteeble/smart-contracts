@@ -100,7 +100,7 @@ contract MinteebleERC721A is MinteeblePartialERC721, ERC721A, ReentrancyGuard {
         active
     {
         _safeMint(_msgSender(), _mintAmount);
-        totalMintedByAddress[_msgSender()] += 1;
+        totalMintedByAddress[_msgSender()] += _mintAmount;
     }
 
     /**
