@@ -16,12 +16,19 @@ import "erc721a/contracts/ERC721A.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "./MinteeblePartialERC721.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 contract MinteebleERC721A is MinteeblePartialERC721, ERC721A, ReentrancyGuard {
     using Counters for Counters.Counter;
     using Strings for uint256;
+
+    bool public whitelistMintEnabled = false;
+    mapping(address => bool) public whitelistClaimed;
+    bytes32 public merkleRoot;
+
+    uint256 public maxWhitelistMintAmountPerTrx = 5;
 
     /**
      *  @notice MinteebleERC721 constructor
@@ -56,6 +63,29 @@ contract MinteebleERC721A is MinteeblePartialERC721, ERC721A, ReentrancyGuard {
     }
 
     /**
+     *  @dev Checks if caller can mint
+     */
+    modifier canWhitelistMint(uint256 _mintAmount) {
+        require(totalSupply() + _mintAmount <= maxSupply, "Max supply exceed!");
+        require(
+            _mintAmount <= maxWhitelistMintAmountPerTrx,
+            "Exceeded maximum total amount per trx!"
+        );
+        _;
+    }
+
+    /**
+     *  @notice Allows owner to set the max number of mintable items in a single transaction
+     *  @param _maxAmount Max amount
+     */
+    function setWhitelistMaxMintAmountPerTrx(uint256 _maxAmount)
+        public
+        onlyOwner
+    {
+        maxWhitelistMintAmountPerTrx = _maxAmount;
+    }
+
+    /**
      *  @inheritdoc ERC721A
      */
     function _startTokenId() internal view virtual override returns (uint256) {
@@ -69,6 +99,14 @@ contract MinteebleERC721A is MinteeblePartialERC721, ERC721A, ReentrancyGuard {
         return baseUri;
     }
 
+    function setWhitelistMintEnabled(bool _state) public onlyOwner {
+        whitelistMintEnabled = _state;
+    }
+
+    function setMerkleRoot(bytes32 _merkleRoot) public onlyOwner {
+        merkleRoot = _merkleRoot;
+    }
+
     /**
      *  @inheritdoc ERC721A
      */
@@ -79,13 +117,33 @@ contract MinteebleERC721A is MinteeblePartialERC721, ERC721A, ReentrancyGuard {
         override
         returns (string memory)
     {
-        require(_exists(_tokenId), "Token ID does not exist.");
+        require(_exists(_tokenId), "Token ID do es not exist.");
 
         // Checks if collection is revealed
-        if (revealed) return preRevealUri;
+        if (!revealed) return preRevealUri;
 
         // Evaluating full URI for the specified ID
         return string.concat(_baseURI(), _tokenId.toString(), uriSuffix);
+    }
+
+    function whitelistMint(uint256 _mintAmount, bytes32[] calldata _merkleProof)
+        public
+        payable
+        virtual
+        canWhitelistMint(_mintAmount)
+        enoughFunds(_mintAmount)
+    {
+        require(whitelistMintEnabled, "The whitelist sale is not enabled!");
+        require(!whitelistClaimed[_msgSender()], "Address already claimed!");
+        bytes32 leaf = keccak256(abi.encodePacked(_msgSender()));
+        require(
+            MerkleProof.verify(_merkleProof, merkleRoot, leaf),
+            "Invalid proof!"
+        );
+
+        whitelistClaimed[_msgSender()] = true;
+        _safeMint(_msgSender(), _mintAmount);
+        totalMintedByAddress[_msgSender()] += _mintAmount;
     }
 
     /**
@@ -103,14 +161,37 @@ contract MinteebleERC721A is MinteeblePartialERC721, ERC721A, ReentrancyGuard {
         totalMintedByAddress[_msgSender()] += _mintAmount;
     }
 
+    function mintForAddress(address receiver, uint256 _mintAmount)
+        public
+        payable
+        enoughFunds(_mintAmount)
+        active
+    {
+        require(
+            _mintAmount <= maxMintAmountPerTrx,
+            "Exceeded maximum total amount per trx!"
+        );
+        require(
+            totalMintedByAddress[receiver] + _mintAmount <=
+                maxMintAmountPerAddress,
+            "Exceeded maximum total amount!"
+        );
+
+        for (uint256 i = 0; i < _mintAmount; i++) {
+            totalMintedByAddress[receiver]++;
+        }
+
+        _safeMint(receiver, _mintAmount);
+    }
+
     /**
      * @notice Mints item for another address. (Reserved to contract owner)
      */
-    function mintForAddress(uint256 _mintAmount, address _receiver)
+    function ownerMintForAddress(uint256 _mintAmount, address _receiver)
         public
-        canMint(_mintAmount)
         onlyOwner
     {
+        require(totalSupply() + _mintAmount <= maxSupply, "Max supply exceed!");
         _safeMint(_receiver, _mintAmount);
     }
 

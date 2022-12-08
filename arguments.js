@@ -1,1 +1,1 @@
-module.exports = ["0x9eeeC8497CA0132fC27206e4dd16bAe0Eb5f02cd"];
+module.exports = ["T3", "T3", 10000, "1000000000000000"];
