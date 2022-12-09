@@ -25,7 +25,6 @@ contract MinteebleERC721A is MinteeblePartialERC721, ERC721A, ReentrancyGuard {
     using Strings for uint256;
 
     bool public whitelistMintEnabled = false;
-    mapping(address => bool) public whitelistClaimed;
     bytes32 public merkleRoot;
 
     uint256 public maxWhitelistMintAmountPerTrx = 5;
@@ -134,14 +133,12 @@ contract MinteebleERC721A is MinteeblePartialERC721, ERC721A, ReentrancyGuard {
         enoughFunds(_mintAmount)
     {
         require(whitelistMintEnabled, "The whitelist sale is not enabled!");
-        require(!whitelistClaimed[_msgSender()], "Address already claimed!");
         bytes32 leaf = keccak256(abi.encodePacked(_msgSender()));
         require(
             MerkleProof.verify(_merkleProof, merkleRoot, leaf),
             "Invalid proof!"
         );
 
-        whitelistClaimed[_msgSender()] = true;
         _safeMint(_msgSender(), _mintAmount);
         totalMintedByAddress[_msgSender()] += _mintAmount;
     }
