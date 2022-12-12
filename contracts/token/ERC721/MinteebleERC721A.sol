@@ -27,7 +27,9 @@ contract MinteebleERC721A is MinteeblePartialERC721, ERC721A, ReentrancyGuard {
     bool public whitelistMintEnabled = false;
     bytes32 public merkleRoot;
 
-    uint256 public maxWhitelistMintAmountPerTrx = 5;
+    uint256 public maxWhitelistMintAmountPerTrx = 1;
+    uint256 public maxWhitelistMintAmountPerAddress = 1;
+    mapping(address => uint256) public totalWhitelistMintedByAddress;
 
     /**
      *  @notice MinteebleERC721 constructor
@@ -70,6 +72,11 @@ contract MinteebleERC721A is MinteeblePartialERC721, ERC721A, ReentrancyGuard {
             _mintAmount <= maxWhitelistMintAmountPerTrx,
             "Exceeded maximum total amount per trx!"
         );
+        require(
+            totalWhitelistMintedByAddress[msg.sender] + _mintAmount <=
+                maxWhitelistMintAmountPerAddress,
+            "Exceeded maximum total amount per address!"
+        );
         _;
     }
 
@@ -82,6 +89,17 @@ contract MinteebleERC721A is MinteeblePartialERC721, ERC721A, ReentrancyGuard {
         onlyOwner
     {
         maxWhitelistMintAmountPerTrx = _maxAmount;
+    }
+
+    /**
+     *  @notice Allows owner to set the max number of mintable items per account
+     *  @param _maxAmount Max amount
+     */
+    function setWhitelistMaxMintAmountPerAddress(uint256 _maxAmount)
+        public
+        onlyOwner
+    {
+        maxWhitelistMintAmountPerAddress = _maxAmount;
     }
 
     /**
@@ -141,6 +159,7 @@ contract MinteebleERC721A is MinteeblePartialERC721, ERC721A, ReentrancyGuard {
 
         _safeMint(_msgSender(), _mintAmount);
         totalMintedByAddress[_msgSender()] += _mintAmount;
+        totalWhitelistMintedByAddress[_msgSender()] += _mintAmount;
     }
 
     /**
