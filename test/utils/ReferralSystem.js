@@ -293,6 +293,28 @@ describe("ReferralSystem", function () {
       account2.address
     );
   });
+
+  it("Try getting refInfo after one invitation", async function () {
+    const [owner, account2, account3] = await ethers.getSigners();
+    const referralSystem = await ethers.getContractFactory("ReferralSystem");
+
+    const hardhatReferralSystem = await referralSystem.deploy();
+
+    hardhatReferralSystem.setInvitation(owner.address, account2.address);
+
+    await hardhatReferralSystem.addLevel(20);
+    let refInfo = await hardhatReferralSystem.getRefInfo(account2.address);
+
+    expect(await hardhatReferralSystem.inviter(owner.address)).to.equal(
+      "0x0000000000000000000000000000000000000000"
+    );
+    expect(await hardhatReferralSystem.inviter(account2.address)).to.equal(
+      owner.address
+    );
+    expect(refInfo.length).to.equal(1);
+    expect(refInfo[0]["percentage"].toNumber()).to.equal(20);
+    expect(refInfo[0]["account"].toString()).to.equal(owner.address);
+  });
 });
 
 /**

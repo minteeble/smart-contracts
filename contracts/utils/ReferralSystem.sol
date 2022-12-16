@@ -21,7 +21,7 @@ contract ReferralSystem is Ownable {
 
     struct RefInfo {
         address account;
-        uint256 perccentage;
+        uint256 percentage;
     }
 
     Level[] public levels;
@@ -99,16 +99,17 @@ contract ReferralSystem is Ownable {
                 );
             } else {
                 levelsFound = levelIndex;
+                break;
             }
         }
 
         RefInfo[] memory refInfoFound = new RefInfo[](levelsFound);
 
-        for (uint256 levelIndex = 0; levelIndex < levels.length; ++levelIndex) {
+        for (uint256 levelIndex = 0; levelIndex < levelsFound; ++levelIndex) {
             refInfoFound[levelIndex] = refInfo[levelIndex];
         }
 
-        return refInfoFound;
+        return refInfo;
     }
 
     // function getRefList(address _account) public returns(address[])
