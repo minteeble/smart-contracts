@@ -89,27 +89,31 @@ contract ReferralSystem is Ownable {
         address currentAccount = _account;
         uint256 levelsFound = 0;
 
-        for (uint256 levelIndex = 0; levelIndex < levels.length; ++levelIndex) {
+        for (levelsFound = 0; levelsFound < levels.length; levelsFound++) {
             address inviterAddr = inviter[currentAccount];
 
             if (inviterAddr != address(0)) {
-                refInfo[levelIndex] = RefInfo(
+                refInfo[levelsFound] = RefInfo(
                     inviterAddr,
-                    levels[levelIndex].percentage
+                    levels[levelsFound].percentage
                 );
+                currentAccount = inviterAddr;
             } else {
-                levelsFound = levelIndex;
                 break;
             }
         }
 
         RefInfo[] memory refInfoFound = new RefInfo[](levelsFound);
 
-        for (uint256 levelIndex = 0; levelIndex < levelsFound; ++levelIndex) {
+        for (
+            uint256 levelIndex = 0;
+            levelIndex < refInfoFound.length;
+            ++levelIndex
+        ) {
             refInfoFound[levelIndex] = refInfo[levelIndex];
         }
 
-        return refInfo;
+        return refInfoFound;
     }
 
     // function getRefList(address _account) public returns(address[])
