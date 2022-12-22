@@ -26,7 +26,6 @@ contract ReferralSystem is Ownable {
 
     Level[] public levels;
     mapping(address => address) public inviter;
-    bool public trackingMode;
 
     modifier isValidAccountAddress(address _account) {
         require(
@@ -34,10 +33,6 @@ contract ReferralSystem is Ownable {
             "Invalid account"
         );
         _;
-    }
-
-    function setTrackingModeEnabled(bool _state) public onlyOwner {
-        trackingMode = _state;
     }
 
     function addLevel(uint256 _percentage) public onlyOwner {
@@ -115,17 +110,4 @@ contract ReferralSystem is Ownable {
 
         return refInfoFound;
     }
-
-    // function getRefList(address _account) public returns(address[])
 }
-
-/**
-
-
-  levels => 15 10 5
-
-  getInviterAccount(address)
-
-
-
- */
