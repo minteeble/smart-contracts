@@ -2,6 +2,8 @@ const { expect } = require("chai");
 const { BigNumber } = require("ethers");
 const { ethers } = require("hardhat");
 
+const refContractInfo = require("../../artifacts/contracts/utils/ReferralSystem.sol/ReferralSystem.json");
+
 const expectThrowsAsync = async (method, errorMessage) => {
   let error = null;
   let noErrors = false;
@@ -19,6 +21,12 @@ const expectThrowsAsync = async (method, errorMessage) => {
 };
 
 describe("ReferralSystem", function () {
+  let refInterface;
+
+  before(async () => {
+    refInterface = new ethers.utils.Interface(refContractInfo.abi);
+  });
+
   it("Deployment of a basic referral", async function () {
     const [owner] = await ethers.getSigners();
     const referralSystem = await ethers.getContractFactory("ReferralSystem");
@@ -486,5 +494,39 @@ describe("ReferralSystem", function () {
     expect(a8Ref[1]["account"].toString()).to.equal(a3.address);
     expect(a8Ref[2]["percentage"].toNumber()).to.equal(1);
     expect(a8Ref[2]["account"].toString()).to.equal(a2.address);
+  });
+
+  it("Try executing two ref actions", async function () {
+    const [owner, account2, account3] = await ethers.getSigners();
+    const referralSystem = await ethers.getContractFactory("ReferralSystem");
+
+    const hardhatReferralSystem = await referralSystem.deploy();
+
+    await hardhatReferralSystem.addLevel(8);
+    await hardhatReferralSystem.addLevel(3);
+
+    await hardhatReferralSystem.setInvitation(owner.address, account2.address);
+    let action1Trx = await hardhatReferralSystem.addAction(account2.address);
+    let action1Data = await refInterface.decodeFunctionData(
+      "addAction",
+      action1Trx.data
+    );
+
+    await hardhatReferralSystem.setInvitation(
+      account2.address,
+      account3.address
+    );
+    let action2Trx = await hardhatReferralSystem.addAction(account3.address);
+    let trxExec = await action2Trx.wait();
+    let action2Data = await refInterface.decodeFunctionData(
+      "addAction",
+      action2Trx.data
+    );
+    console.log(action2Trx, trxExec.events[0].args, action2Data);
+
+    let action3Trx = await hardhatReferralSystem.addAction(account3.address);
+    let action3Data = await action3Trx.wait();
+
+    // console.log(action1Data, action2Data, action3Data);
   });
 });

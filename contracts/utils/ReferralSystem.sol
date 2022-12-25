@@ -87,6 +87,8 @@ contract ReferralSystem is Ownable {
 
         RefInfo[] memory refInfo = getRefInfo(_account);
 
+        require(refInfo.length > 0, "Beh");
+
         for (uint256 i = 0; i < refInfo.length; i++) {
             emit RefAction(_account, refInfo[i].account, refInfo[i].percentage);
         }
