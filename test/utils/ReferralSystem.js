@@ -382,6 +382,23 @@ describe("ReferralSystem", function () {
     expect(account3RefInfo[1]["account"].toString()).to.equal(owner.address);
   });
 
+  it("Try inviting the same address two times from different inviter", async function () {
+    const [owner, account2, account3] = await ethers.getSigners();
+    const referralSystem = await ethers.getContractFactory("ReferralSystem");
+
+    const hardhatReferralSystem = await referralSystem.deploy();
+
+    await hardhatReferralSystem.setInvitation(owner.address, account2.address);
+    await hardhatReferralSystem.setInvitation(
+      account2.address,
+      account3.address
+    );
+
+    await expectThrowsAsync(() =>
+      hardhatReferralSystem.setInvitation(account2.address, account3.address)
+    );
+  });
+
   /**
    * Emulates and verifies the following accounts structure:
    *

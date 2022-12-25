@@ -27,6 +27,8 @@ contract ReferralSystem is Ownable {
     Level[] public levels;
     mapping(address => address) public inviter;
 
+    event RefAction(address _from, address _to, uint256 _percentage);
+
     modifier isValidAccountAddress(address _account) {
         require(
             _account != address(0) && _account != address(this),
@@ -65,10 +67,31 @@ contract ReferralSystem is Ownable {
         isValidAccountAddress(_invitee)
     {
         require(
+            inviter[_invitee] == address(0x0),
+            "Invitee has already an inviter"
+        );
+        require(
             _inviter != _invitee,
             "Inviter and invitee are the same address"
         );
+
         inviter[_invitee] = _inviter;
+    }
+
+    function addAction(address _account)
+        public
+        onlyOwner
+        returns (RefInfo[] memory)
+    {
+        require(inviter[_account] != address(0x0), "Account has not inviter");
+
+        RefInfo[] memory refInfo = getRefInfo(_account);
+
+        for (uint256 i = 0; i < refInfo.length; i++) {
+            emit RefAction(_account, refInfo[i].account, refInfo[i].percentage);
+        }
+
+        return refInfo;
     }
 
     function hasInviter(address _account) public view returns (bool) {
