@@ -27,7 +27,7 @@ contract ReferralSystem is Ownable {
     Level[] public levels;
     mapping(address => address) public inviter;
 
-    event RefAction(address _from, address _to, uint256 _percentage);
+    event RefAction(address _from, address indexed _to, uint256 _percentage);
 
     modifier isValidAccountAddress(address _account) {
         require(
