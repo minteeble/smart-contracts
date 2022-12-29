@@ -19,13 +19,18 @@ contract ReferralSystem is Ownable {
         uint256 percentage;
     }
 
+    struct Rank {
+        Level[] levels;
+    }
+
     struct RefInfo {
         address account;
         uint256 percentage;
     }
 
-    Level[] public levels;
     mapping(address => address) public inviter;
+    mapping(address => uint256) public accountRank;
+    Rank[] internal ranks;
 
     event RefAction(address _from, address indexed _to, uint256 _percentage);
 
@@ -37,27 +42,76 @@ contract ReferralSystem is Ownable {
         _;
     }
 
-    function addLevel(uint256 _percentage) public onlyOwner {
-        levels.push(Level(_percentage));
+    modifier isValidRankIndex(uint256 _rankIndex) {
+        require(_rankIndex < ranks.length, "Invalid rank index");
+        _;
     }
 
-    function editLevel(uint256 _levelIndex, uint256 _percentage)
+    modifier isValidLevelIndex(uint256 _rankIndex, uint256 _levelIndex) {
+        require(_rankIndex < ranks.length, "Invalid rank index");
+        require(
+            _levelIndex < ranks[_rankIndex].levels.length,
+            "Invalid level index"
+        );
+        _;
+    }
+
+    function ranksLength() public view returns (uint256) {
+        return ranks.length;
+    }
+
+    function addRank() public onlyOwner {
+        ranks.push(Rank(new Level[](0)));
+    }
+
+    function removeRank() public onlyOwner {
+        require(ranks.length > 0, "No ranks available");
+
+        ranks.pop();
+    }
+
+    function addLevel(uint256 _rankIndex, uint256 _percentage)
         public
         onlyOwner
+        isValidRankIndex(_rankIndex)
     {
-        require(levels.length > _levelIndex, "Level not found");
-
-        levels[_levelIndex].percentage = _percentage;
+        ranks[_rankIndex].levels.push(Level(_percentage));
     }
 
-    function removeLevel() public onlyOwner {
-        require(levels.length > 0, "No levels available");
-
-        levels.pop();
+    function editLevel(
+        uint256 _rankIndex,
+        uint256 _levelIndex,
+        uint256 _percentage
+    ) public onlyOwner isValidLevelIndex(_rankIndex, _levelIndex) {
+        ranks[_rankIndex].levels[_levelIndex].percentage = _percentage;
     }
 
-    function getLevels() public view onlyOwner returns (Level[] memory) {
-        return levels;
+    function removeLevel(uint256 _rankIndex)
+        public
+        onlyOwner
+        isValidRankIndex(_rankIndex)
+    {
+        require(ranks[_rankIndex].levels.length > 0, "No levels available");
+
+        ranks[_rankIndex].levels.pop();
+    }
+
+    function getLevels(uint256 _rankIndex)
+        public
+        view
+        onlyOwner
+        isValidRankIndex(_rankIndex)
+        returns (Level[] memory)
+    {
+        return ranks[_rankIndex].levels;
+    }
+
+    function setAccountRank(address _account, uint256 _rankIndex)
+        public
+        onlyOwner
+        isValidRankIndex(_rankIndex)
+    {
+        accountRank[_account] = _rankIndex;
     }
 
     function setInvitation(address _inviter, address _invitee)
@@ -76,6 +130,7 @@ contract ReferralSystem is Ownable {
         );
 
         inviter[_invitee] = _inviter;
+        accountRank[_invitee] = accountRank[_inviter];
     }
 
     function addAction(address _account)
@@ -86,8 +141,6 @@ contract ReferralSystem is Ownable {
         require(inviter[_account] != address(0x0), "Account has not inviter");
 
         RefInfo[] memory refInfo = getRefInfo(_account);
-
-        require(refInfo.length > 0, "Beh");
 
         for (uint256 i = 0; i < refInfo.length; i++) {
             emit RefAction(_account, refInfo[i].account, refInfo[i].percentage);
@@ -105,17 +158,25 @@ contract ReferralSystem is Ownable {
         view
         returns (RefInfo[] memory)
     {
-        RefInfo[] memory refInfo = new RefInfo[](levels.length);
+        uint256 rankIndex = accountRank[_account];
+
+        RefInfo[] memory refInfo = new RefInfo[](
+            ranks[rankIndex].levels.length
+        );
         address currentAccount = _account;
         uint256 levelsFound = 0;
 
-        for (levelsFound = 0; levelsFound < levels.length; levelsFound++) {
+        for (
+            levelsFound = 0;
+            levelsFound < ranks[rankIndex].levels.length;
+            levelsFound++
+        ) {
             address inviterAddr = inviter[currentAccount];
 
             if (inviterAddr != address(0)) {
                 refInfo[levelsFound] = RefInfo(
                     inviterAddr,
-                    levels[levelsFound].percentage
+                    ranks[rankIndex].levels[levelsFound].percentage
                 );
                 currentAccount = inviterAddr;
             } else {
