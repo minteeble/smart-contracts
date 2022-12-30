@@ -20,14 +20,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 /// which with a different levels structure.
 /// @dev The contract is meant to be used inside another contract (owner)
 contract ReferralSystem is Ownable {
-    /// @dev Struct representing a Level
-    struct Level {
-        uint256 percentage;
-    }
-
-    /// @dev Struct representing a Rank
     struct Rank {
-        Level[] levels;
+        uint256[] levels;
     }
 
     /// @dev Struct representing a RefInfo, so a model used when asking info
@@ -73,7 +67,9 @@ contract ReferralSystem is Ownable {
 
     /// @notice Adds a new empty rank
     function addRank() public onlyOwner {
-        ranks.push(Rank(new Level[](0)));
+        uint256[] memory levels;
+
+        ranks.push(Rank(levels));
     }
 
     /// @notice Removes the last rank
@@ -92,7 +88,7 @@ contract ReferralSystem is Ownable {
         onlyOwner
         isValidRankIndex(_rankIndex)
     {
-        ranks[_rankIndex].levels.push(Level(_percentage));
+        ranks[_rankIndex].levels.push(_percentage);
     }
 
     /// @notice Edits the percentage of an existing level
@@ -104,7 +100,7 @@ contract ReferralSystem is Ownable {
         uint256 _levelIndex,
         uint256 _percentage
     ) public onlyOwner isValidLevelIndex(_rankIndex, _levelIndex) {
-        ranks[_rankIndex].levels[_levelIndex].percentage = _percentage;
+        ranks[_rankIndex].levels[_levelIndex] = _percentage;
     }
 
     /// @notice Removes the last level of the specified Rank
@@ -127,7 +123,7 @@ contract ReferralSystem is Ownable {
         view
         onlyOwner
         isValidRankIndex(_rankIndex)
-        returns (Level[] memory)
+        returns (uint256[] memory)
     {
         return ranks[_rankIndex].levels;
     }
@@ -220,7 +216,7 @@ contract ReferralSystem is Ownable {
             if (inviterAddr != address(0)) {
                 refInfo[levelsFound] = RefInfo(
                     inviterAddr,
-                    ranks[rankIndex].levels[levelsFound].percentage
+                    ranks[rankIndex].levels[levelsFound]
                 );
                 currentAccount = inviterAddr;
             } else {

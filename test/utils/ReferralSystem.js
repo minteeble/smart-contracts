@@ -39,7 +39,8 @@ describe("ReferralSystem", function () {
     const referralSystem = await ethers.getContractFactory("ReferralSystem");
 
     const hardhatReferralSystem = await referralSystem.deploy();
-    let levels = await hardhatReferralSystem.getLevels();
+    await hardhatReferralSystem.addRank();
+    let levels = await hardhatReferralSystem.getLevels(0);
 
     expect(Array.isArray(levels)).to.equal(true);
     expect(levels.length).to.equal(0);
@@ -50,14 +51,13 @@ describe("ReferralSystem", function () {
     const referralSystem = await ethers.getContractFactory("ReferralSystem");
 
     const hardhatReferralSystem = await referralSystem.deploy();
-
+    await hardhatReferralSystem.addRank();
     // level with 23 %
-    await hardhatReferralSystem.addLevel(23);
-    let levels = await hardhatReferralSystem.getLevels();
-
+    await hardhatReferralSystem.addLevel(0, 23);
+    let levels = await hardhatReferralSystem.getLevels(0);
     expect(Array.isArray(levels)).to.equal(true);
     expect(levels.length).to.equal(1);
-    expect(BigNumber.from(levels[0][0]._hex).toNumber()).to.equal(23);
+    expect(BigNumber.from(levels[0]).toNumber()).to.equal(23);
   });
 
   it("Adds 3 levels", async function () {
@@ -65,17 +65,17 @@ describe("ReferralSystem", function () {
     const referralSystem = await ethers.getContractFactory("ReferralSystem");
 
     const hardhatReferralSystem = await referralSystem.deploy();
-
-    await hardhatReferralSystem.addLevel(21);
-    await hardhatReferralSystem.addLevel(9);
-    await hardhatReferralSystem.addLevel(2);
-    let levels = await hardhatReferralSystem.getLevels();
+    await hardhatReferralSystem.addRank();
+    await hardhatReferralSystem.addLevel(0, 21);
+    await hardhatReferralSystem.addLevel(0, 9);
+    await hardhatReferralSystem.addLevel(0, 2);
+    let levels = await hardhatReferralSystem.getLevels(0);
 
     expect(Array.isArray(levels)).to.equal(true);
     expect(levels.length).to.equal(3);
-    expect(BigNumber.from(levels[0][0]._hex).toNumber()).to.equal(21);
-    expect(BigNumber.from(levels[1][0]._hex).toNumber()).to.equal(9);
-    expect(BigNumber.from(levels[2][0]._hex).toNumber()).to.equal(2);
+    expect(BigNumber.from(levels[0]).toNumber()).to.equal(21);
+    expect(BigNumber.from(levels[1]).toNumber()).to.equal(9);
+    expect(BigNumber.from(levels[2]).toNumber()).to.equal(2);
   });
 
   it("Trying edit level percentage - no levels", async function () {
@@ -94,13 +94,13 @@ describe("ReferralSystem", function () {
     const referralSystem = await ethers.getContractFactory("ReferralSystem");
 
     const hardhatReferralSystem = await referralSystem.deploy();
-
-    await hardhatReferralSystem.addLevel(20);
-    await hardhatReferralSystem.editLevel(0, 30);
+    await hardhatReferralSystem.addRank();
+    await hardhatReferralSystem.addLevel(0, 20);
+    await hardhatReferralSystem.editLevel(0, 0, 30);
     expect(
-      BigNumber.from((await hardhatReferralSystem.getLevels())[0][0]._hex)
+      BigNumber.from((await hardhatReferralSystem.getLevels(0))[0])
     ).to.equal(30);
-    await expectThrowsAsync(() => hardhatReferralSystem.editLevel(1, 10));
+    await expectThrowsAsync(() => hardhatReferralSystem.editLevel(0, 1, 10));
   });
 
   it("Trying edit level percentage - multiple levels", async function () {
@@ -108,21 +108,21 @@ describe("ReferralSystem", function () {
     const referralSystem = await ethers.getContractFactory("ReferralSystem");
 
     const hardhatReferralSystem = await referralSystem.deploy();
-
-    await hardhatReferralSystem.addLevel(20);
-    await hardhatReferralSystem.addLevel(12);
-    await hardhatReferralSystem.editLevel(0, 30);
-    await hardhatReferralSystem.editLevel(1, 23);
+    await hardhatReferralSystem.addRank();
+    await hardhatReferralSystem.addLevel(0, 20);
+    await hardhatReferralSystem.addLevel(0, 12);
+    await hardhatReferralSystem.editLevel(0, 0, 30);
+    await hardhatReferralSystem.editLevel(0, 1, 23);
     expect(
-      BigNumber.from((await hardhatReferralSystem.getLevels())[0][0]._hex)
+      BigNumber.from((await hardhatReferralSystem.getLevels(0))[0])
     ).to.equal(30);
 
     expect(
-      BigNumber.from((await hardhatReferralSystem.getLevels())[1][0]._hex)
+      BigNumber.from((await hardhatReferralSystem.getLevels(0))[1])
     ).to.equal(23);
-    await expectThrowsAsync(() => hardhatReferralSystem.editLevel(2, 10));
-    await expectThrowsAsync(() => hardhatReferralSystem.editLevel(3, 10));
-    await expectThrowsAsync(() => hardhatReferralSystem.editLevel(-1, 0));
+    await expectThrowsAsync(() => hardhatReferralSystem.editLevel(0, 2, 10));
+    await expectThrowsAsync(() => hardhatReferralSystem.editLevel(0, 3, 10));
+    await expectThrowsAsync(() => hardhatReferralSystem.editLevel(0, -1, 0));
   });
 
   it("Trying removing level - no levels", async function () {
@@ -139,10 +139,10 @@ describe("ReferralSystem", function () {
     const referralSystem = await ethers.getContractFactory("ReferralSystem");
 
     const hardhatReferralSystem = await referralSystem.deploy();
-
-    await hardhatReferralSystem.addLevel(20);
-    await hardhatReferralSystem.removeLevel();
-    let levels = await hardhatReferralSystem.getLevels();
+    await hardhatReferralSystem.addRank();
+    await hardhatReferralSystem.addLevel(0, 20);
+    await hardhatReferralSystem.removeLevel(0);
+    let levels = await hardhatReferralSystem.getLevels(0);
     expect(Array.isArray(levels)).to.equal(true);
     expect(levels.length).to.equal(0);
   });
@@ -153,12 +153,13 @@ describe("ReferralSystem", function () {
 
     const hardhatReferralSystem = await referralSystem.deploy();
 
-    await hardhatReferralSystem.addLevel(20);
-    await hardhatReferralSystem.addLevel(10);
-    await hardhatReferralSystem.addLevel(5);
-    await hardhatReferralSystem.removeLevel();
-    await hardhatReferralSystem.removeLevel();
-    let levels = await hardhatReferralSystem.getLevels();
+    await hardhatReferralSystem.addRank();
+    await hardhatReferralSystem.addLevel(0, 20);
+    await hardhatReferralSystem.addLevel(0, 10);
+    await hardhatReferralSystem.addLevel(0, 5);
+    await hardhatReferralSystem.removeLevel(0);
+    await hardhatReferralSystem.removeLevel(0);
+    let levels = await hardhatReferralSystem.getLevels(0);
     expect(Array.isArray(levels)).to.equal(true);
     expect(levels.length).to.equal(1);
   });
@@ -308,7 +309,8 @@ describe("ReferralSystem", function () {
 
     const hardhatReferralSystem = await referralSystem.deploy();
 
-    await hardhatReferralSystem.addLevel(20);
+    await hardhatReferralSystem.addRank();
+    await hardhatReferralSystem.addLevel(0, 20);
     await hardhatReferralSystem.setInvitation(owner.address, account2.address);
 
     let ownerRefInfo = await hardhatReferralSystem.getRefInfo(owner.address);
@@ -335,10 +337,11 @@ describe("ReferralSystem", function () {
 
     const hardhatReferralSystem = await referralSystem.deploy();
 
+    await hardhatReferralSystem.addRank();
     hardhatReferralSystem.setInvitation(owner.address, account2.address);
     hardhatReferralSystem.setInvitation(account2.address, account3.address);
 
-    await hardhatReferralSystem.addLevel(9);
+    await hardhatReferralSystem.addLevel(0, 9);
     let ownerRefInfo = await hardhatReferralSystem.getRefInfo(owner.address);
     let account2RefInfo = await hardhatReferralSystem.getRefInfo(
       account2.address
@@ -363,12 +366,12 @@ describe("ReferralSystem", function () {
     const referralSystem = await ethers.getContractFactory("ReferralSystem");
 
     const hardhatReferralSystem = await referralSystem.deploy();
-
+    await hardhatReferralSystem.addRank();
     hardhatReferralSystem.setInvitation(owner.address, account2.address);
     hardhatReferralSystem.setInvitation(account2.address, account3.address);
 
-    await hardhatReferralSystem.addLevel(10);
-    await hardhatReferralSystem.addLevel(4);
+    await hardhatReferralSystem.addLevel(0, 10);
+    await hardhatReferralSystem.addLevel(0, 4);
     let ownerRefInfo = await hardhatReferralSystem.getRefInfo(owner.address);
     let account2RefInfo = await hardhatReferralSystem.getRefInfo(
       account2.address
@@ -424,9 +427,10 @@ describe("ReferralSystem", function () {
     const referralSystem = await ethers.getContractFactory("ReferralSystem");
     const hardhatReferralSystem = await referralSystem.deploy();
 
-    await hardhatReferralSystem.addLevel(8);
-    await hardhatReferralSystem.addLevel(3);
-    await hardhatReferralSystem.addLevel(1);
+    await hardhatReferralSystem.addRank();
+    await hardhatReferralSystem.addLevel(0, 8);
+    await hardhatReferralSystem.addLevel(0, 3);
+    await hardhatReferralSystem.addLevel(0, 1);
 
     await hardhatReferralSystem.setInvitation(a1.address, a2.address);
     await hardhatReferralSystem.setInvitation(a2.address, a3.address);
@@ -502,8 +506,9 @@ describe("ReferralSystem", function () {
 
     const hardhatReferralSystem = await referralSystem.deploy();
 
-    await hardhatReferralSystem.addLevel(8);
-    await hardhatReferralSystem.addLevel(3);
+    await hardhatReferralSystem.addRank();
+    await hardhatReferralSystem.addLevel(0, 8);
+    await hardhatReferralSystem.addLevel(0, 3);
 
     await hardhatReferralSystem.setInvitation(owner.address, account2.address);
     let action1Trx = await hardhatReferralSystem.addAction(account2.address);
