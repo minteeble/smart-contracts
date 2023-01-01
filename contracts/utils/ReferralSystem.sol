@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.14;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 
 //  =============================================
 //   _   _  _  _  _  ___  ___  ___  ___ _    ___
@@ -19,7 +19,10 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 /// Each level is characterized by a percentage. Also it is possible to create multiple ranks, each of
 /// which with a different levels structure.
 /// @dev The contract is meant to be used inside another contract (owner)
-contract ReferralSystem is Ownable {
+contract ReferralSystem is AccessControlEnumerable {
+    /// @notice Inviter role
+    bytes32 public constant INVITER_ROLE = keccak256("INVITER_ROLE");
+
     struct Rank {
         uint256[] levels;
     }
@@ -36,6 +39,10 @@ contract ReferralSystem is Ownable {
     Rank[] internal ranks;
 
     event RefAction(address _from, address indexed _to, uint256 _percentage);
+
+    constructor() {
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    }
 
     modifier isValidAccountAddress(address _account) {
         require(
@@ -59,6 +66,20 @@ contract ReferralSystem is Ownable {
         _;
     }
 
+    modifier requireAdmin(address _account) {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _account), "Unauthorized");
+        _;
+    }
+
+    modifier requireInviterOrHigher(address _account) {
+        require(
+            hasRole(DEFAULT_ADMIN_ROLE, msg.sender) ||
+                hasRole(INVITER_ROLE, msg.sender),
+            "Unauthorized"
+        );
+        _;
+    }
+
     /// @notice Gets the number of available ranks
     /// @return Number of available ranks inside the system
     function ranksLength() public view returns (uint256) {
@@ -66,14 +87,14 @@ contract ReferralSystem is Ownable {
     }
 
     /// @notice Adds a new empty rank
-    function addRank() public onlyOwner {
+    function addRank() public onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256[] memory levels;
 
         ranks.push(Rank(levels));
     }
 
     /// @notice Removes the last rank
-    function removeRank() public onlyOwner {
+    function removeRank() public onlyRole(DEFAULT_ADMIN_ROLE) {
         require(ranks.length > 0, "No ranks available");
 
         // Remove rank from top
@@ -85,7 +106,7 @@ contract ReferralSystem is Ownable {
     /// @param _percentage Referral percentage of the level to be created
     function addLevel(uint256 _rankIndex, uint256 _percentage)
         public
-        onlyOwner
+        onlyRole(DEFAULT_ADMIN_ROLE)
         isValidRankIndex(_rankIndex)
     {
         ranks[_rankIndex].levels.push(_percentage);
@@ -99,7 +120,11 @@ contract ReferralSystem is Ownable {
         uint256 _rankIndex,
         uint256 _levelIndex,
         uint256 _percentage
-    ) public onlyOwner isValidLevelIndex(_rankIndex, _levelIndex) {
+    )
+        public
+        requireAdmin(msg.sender)
+        isValidLevelIndex(_rankIndex, _levelIndex)
+    {
         ranks[_rankIndex].levels[_levelIndex] = _percentage;
     }
 
@@ -107,7 +132,7 @@ contract ReferralSystem is Ownable {
     /// @param _rankIndex Index of the rank to be removed
     function removeLevel(uint256 _rankIndex)
         public
-        onlyOwner
+        requireAdmin(msg.sender)
         isValidRankIndex(_rankIndex)
     {
         require(ranks[_rankIndex].levels.length > 0, "No levels available");
@@ -121,7 +146,7 @@ contract ReferralSystem is Ownable {
     function getLevels(uint256 _rankIndex)
         public
         view
-        onlyOwner
+        requireAdmin(msg.sender)
         isValidRankIndex(_rankIndex)
         returns (uint256[] memory)
     {
@@ -133,19 +158,14 @@ contract ReferralSystem is Ownable {
     /// @param _rankIndex Index of the rank to be set
     function setAccountRank(address _account, uint256 _rankIndex)
         public
-        onlyOwner
+        requireAdmin(msg.sender)
         isValidRankIndex(_rankIndex)
     {
         accountRank[_account] = _rankIndex;
     }
 
-    /// @notice Creates the invitation (relationship) between inviter and invitee.
-    /// The invitee inherits the inviter's rank
-    /// @param _inviter Inviter address
-    /// @param _invitee Invitee address
-    function setInvitation(address _inviter, address _invitee)
-        public
-        onlyOwner
+    function _setInvitation(address _inviter, address _invitee)
+        internal
         isValidAccountAddress(_inviter)
         isValidAccountAddress(_invitee)
     {
@@ -162,15 +182,18 @@ contract ReferralSystem is Ownable {
         accountRank[_invitee] = accountRank[_inviter];
     }
 
-    /// @notice Adds a new referral action into the system
-    /// @dev Emits the events for each account above the one provided
-    /// @param _account Account address that is committing the action
-    /// @return The list of referral info for all the accounts above the one provided
-    function addAction(address _account)
+    /// @notice Creates the invitation (relationship) between inviter and invitee.
+    /// The invitee inherits the inviter's rank
+    /// @param _inviter Inviter address
+    /// @param _invitee Invitee address
+    function setInvitation(address _inviter, address _invitee)
         public
-        onlyOwner
-        returns (RefInfo[] memory)
+        requireInviterOrHigher(msg.sender)
     {
+        _setInvitation(_inviter, _invitee);
+    }
+
+    function _addAction(address _account) internal returns (RefInfo[] memory) {
         require(inviter[_account] != address(0x0), "Account has not inviter");
 
         RefInfo[] memory refInfo = getRefInfo(_account);
@@ -180,6 +203,18 @@ contract ReferralSystem is Ownable {
         }
 
         return refInfo;
+    }
+
+    /// @notice Adds a new referral action into the system
+    /// @dev Emits the events for each account above the one provided
+    /// @param _account Account address that is committing the action
+    /// @return The list of referral info for all the accounts above the one provided
+    function addAction(address _account)
+        public
+        requireAdmin(msg.sender)
+        returns (RefInfo[] memory)
+    {
+        return _addAction(_account);
     }
 
     /// @notice Checks if the specified address has an inviter or not
