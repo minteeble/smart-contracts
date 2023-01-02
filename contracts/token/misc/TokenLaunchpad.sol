@@ -39,6 +39,11 @@ contract TokenLaunchpad is ReferralSystem {
     /// @notice Removes an existing project
     /// @param _project Project address to be removed
     function removeProject(address _project) public requireAdmin(msg.sender) {
+        require(
+            hasRole(CRYPTO_PROJECT_ROLE, _project),
+            "Invalid project address"
+        );
+
         _revokeRole(CRYPTO_PROJECT_ROLE, _project);
     }
 
@@ -46,6 +51,13 @@ contract TokenLaunchpad is ReferralSystem {
     /// @return The number of crypto projects
     function projectsNum() public view returns (uint256) {
         return getRoleMemberCount(CRYPTO_PROJECT_ROLE);
+    }
+
+    /// @notice Gets the project by specifying its index
+    /// @param _index Project Index inside the Launchpad
+    /// @return The project address
+    function projectAtIndex(uint256 _index) public view returns (address) {
+        return getRoleMember(CRYPTO_PROJECT_ROLE, _index);
     }
 
     /// @notice Accepts the invitation from the inviter, so the transaction sender will be registered as invited from inviter address

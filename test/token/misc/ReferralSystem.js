@@ -526,7 +526,7 @@ describe("ReferralSystem", function () {
       "addAction",
       action2Trx.data
     );
-    console.log(action2Trx, trxExec.events[0].args, action2Data);
+    // console.log(action2Trx, trxExec.events[0].args, action2Data);
 
     let action3Trx = await hardhatReferralSystem.addAction(account3.address);
     let action3Data = await action3Trx.wait();
