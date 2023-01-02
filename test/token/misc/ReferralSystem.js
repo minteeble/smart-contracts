@@ -2,7 +2,7 @@ const { expect } = require("chai");
 const { BigNumber } = require("ethers");
 const { ethers } = require("hardhat");
 
-const refContractInfo = require("../../artifacts/contracts/utils/ReferralSystem.sol/ReferralSystem.json");
+const refContractInfo = require("../../../artifacts/contracts/token/misc/ReferralSystem.sol/ReferralSystem.json");
 
 const expectThrowsAsync = async (method, errorMessage) => {
   let error = null;
@@ -508,7 +508,6 @@ describe("ReferralSystem", function () {
 
     await hardhatReferralSystem.addRank();
     await hardhatReferralSystem.addLevel(0, 8);
-    await hardhatReferralSystem.addLevel(0, 3);
 
     await hardhatReferralSystem.setInvitation(owner.address, account2.address);
     let action1Trx = await hardhatReferralSystem.addAction(account2.address);
