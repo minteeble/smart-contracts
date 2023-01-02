@@ -14,15 +14,8 @@ import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 //
 //  =============================================
 
-/// @title A multi-level referral system contract
-/// @notice The ReferralSystem contract can handle a multi-level scenario.
-/// Each level is characterized by a percentage. Also it is possible to create multiple ranks, each of
-/// which with a different levels structure.
-/// @dev The contract is meant to be used inside another contract (owner)
-contract ReferralSystem is AccessControlEnumerable {
-    /// @notice Inviter role
-    bytes32 public constant INVITER_ROLE = keccak256("INVITER_ROLE");
-
+interface IReferralSystem {
+    /// @dev Struct representing a Rank, so a list of percentages for levels
     struct Rank {
         uint256[] levels;
     }
@@ -34,8 +27,56 @@ contract ReferralSystem is AccessControlEnumerable {
         uint256 percentage;
     }
 
-    mapping(address => address) public inviter;
-    mapping(address => uint256) public accountRank;
+    function getRefInfo(address _account)
+        external
+        view
+        returns (RefInfo[] memory);
+
+    function inviterOf(address _account) external view returns (address);
+
+    function accountRankOf(address _account) external view returns (uint256);
+
+    function ranksLength() external view returns (uint256);
+
+    function addRank() external;
+
+    function removeRank() external;
+
+    function addLevel(uint256 _rankIndex, uint256 _percentage) external;
+
+    function editLevel(
+        uint256 _rankIndex,
+        uint256 _levelIndex,
+        uint256 _percentage
+    ) external;
+
+    function removeLevel(uint256 _rankIndex) external;
+
+    function getLevels(uint256 _rankIndex)
+        external
+        view
+        returns (uint256[] memory);
+
+    function setAccountRank(address _account, uint256 _rankIndex) external;
+
+    function setInvitation(address _inviter, address _invitee) external;
+
+    function addAction(address _account) external returns (RefInfo[] memory);
+
+    function hasInviter(address _account) external view returns (bool);
+}
+
+/// @title A multi-level referral system contract
+/// @notice The ReferralSystem contract can handle a multi-level scenario.
+/// Each level is characterized by a percentage. Also it is possible to create multiple ranks, each of
+/// which with a different levels structure.
+/// @dev The contract is meant to be used inside another contract (owner)
+contract ReferralSystem is AccessControlEnumerable, IReferralSystem {
+    /// @notice Inviter role
+    bytes32 public constant INVITER_ROLE = keccak256("INVITER_ROLE");
+
+    mapping(address => address) internal inviter;
+    mapping(address => uint256) internal accountRank;
     Rank[] internal ranks;
 
     event RefAction(address _from, address indexed _to, uint256 _percentage);
@@ -153,6 +194,14 @@ contract ReferralSystem is AccessControlEnumerable {
         return ranks[_rankIndex].levels;
     }
 
+    function inviterOf(address _account) public view returns (address) {
+        return inviter[_account];
+    }
+
+    function accountRankOf(address _account) public view returns (uint256) {
+        return accountRank[_account];
+    }
+
     /// @notice Method to manually set the account rank
     /// @param _account Account address
     /// @param _rankIndex Index of the rank to be set
@@ -188,6 +237,7 @@ contract ReferralSystem is AccessControlEnumerable {
     /// @param _invitee Invitee address
     function setInvitation(address _inviter, address _invitee)
         public
+        virtual
         requireInviterOrHigher(msg.sender)
     {
         _setInvitation(_inviter, _invitee);
@@ -211,6 +261,7 @@ contract ReferralSystem is AccessControlEnumerable {
     /// @return The list of referral info for all the accounts above the one provided
     function addAction(address _account)
         public
+        virtual
         requireAdmin(msg.sender)
         returns (RefInfo[] memory)
     {

@@ -276,10 +276,10 @@ describe("ReferralSystem", function () {
 
     hardhatReferralSystem.setInvitation(owner.address, account2.address);
 
-    expect(await hardhatReferralSystem.inviter(account2.address)).to.equal(
+    expect(await hardhatReferralSystem.inviterOf(account2.address)).to.equal(
       owner.address
     );
-    expect(await hardhatReferralSystem.inviter(owner.address)).to.equal(
+    expect(await hardhatReferralSystem.inviterOf(owner.address)).to.equal(
       "0x0000000000000000000000000000000000000000"
     );
   });
@@ -292,13 +292,13 @@ describe("ReferralSystem", function () {
 
     hardhatReferralSystem.setInvitation(owner.address, account2.address);
     hardhatReferralSystem.setInvitation(account2.address, account3.address);
-    expect(await hardhatReferralSystem.inviter(owner.address)).to.equal(
+    expect(await hardhatReferralSystem.inviterOf(owner.address)).to.equal(
       "0x0000000000000000000000000000000000000000"
     );
-    expect(await hardhatReferralSystem.inviter(account2.address)).to.equal(
+    expect(await hardhatReferralSystem.inviterOf(account2.address)).to.equal(
       owner.address
     );
-    expect(await hardhatReferralSystem.inviter(account3.address)).to.equal(
+    expect(await hardhatReferralSystem.inviterOf(account3.address)).to.equal(
       account2.address
     );
   });
@@ -318,10 +318,10 @@ describe("ReferralSystem", function () {
       account2.address
     );
 
-    expect(await hardhatReferralSystem.inviter(owner.address)).to.equal(
+    expect(await hardhatReferralSystem.inviterOf(owner.address)).to.equal(
       "0x0000000000000000000000000000000000000000"
     );
-    expect(await hardhatReferralSystem.inviter(account2.address)).to.equal(
+    expect(await hardhatReferralSystem.inviterOf(account2.address)).to.equal(
       owner.address
     );
     expect(ownerRefInfo.length).to.equal(0);
