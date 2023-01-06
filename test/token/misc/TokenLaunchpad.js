@@ -112,8 +112,21 @@ describe("TokenLaunchpad", function () {
     const [admin, project, a1, a2, a3, a4, a5, a6, a7, a8] =
       await ethers.getSigners();
     const launchpad = await ethers.getContractFactory("TokenLaunchpad");
+    const token = await ethers.getContractFactory("LaunchpadERC20Token");
 
     const deployedLaunchpad = await launchpad.deploy();
+    const deployedToken = await token.deploy("NAME", "SYMBOL", "10");
+
+    // console.log("LAUNCHPAD:", deployedLaunchpad.address);
+    // console.log("TOKEN:", deployedToken.address);
+    // console.log("ADMIN:", admin.address);
+
+    await deployedLaunchpad.setERC20Token(deployedToken.address);
+
+    await deployedToken.grantRole(
+      (await deployedToken.MINTER_ROLE()).toString(),
+      deployedLaunchpad.address
+    );
 
     await deployedLaunchpad.addRank();
     await deployedLaunchpad.addLevel(0, 7);
@@ -219,28 +232,28 @@ describe("TokenLaunchpad", function () {
       await deployedLaunchpad.connect(admin).addAction(a8.address)
     ).wait();
 
-    expect(actionRes.events.length).to.equal(7);
+    expect(actionRes.events.length).to.equal(7 * 2);
     expect(actionRes.events[0].args._percentage).to.equal(7);
     expect(actionRes.events[0].args._from).to.equal(a8.address);
     expect(actionRes.events[0].args._to).to.equal(a7.address);
-    expect(actionRes.events[1].args._percentage).to.equal(6);
-    expect(actionRes.events[1].args._from).to.equal(a8.address);
-    expect(actionRes.events[1].args._to).to.equal(a6.address);
-    expect(actionRes.events[2].args._percentage).to.equal(5);
+    expect(actionRes.events[2].args._percentage).to.equal(6);
     expect(actionRes.events[2].args._from).to.equal(a8.address);
-    expect(actionRes.events[2].args._to).to.equal(a5.address);
-    expect(actionRes.events[3].args._percentage).to.equal(4);
-    expect(actionRes.events[3].args._from).to.equal(a8.address);
-    expect(actionRes.events[3].args._to).to.equal(a4.address);
-    expect(actionRes.events[4].args._percentage).to.equal(3);
+    expect(actionRes.events[2].args._to).to.equal(a6.address);
+    expect(actionRes.events[4].args._percentage).to.equal(5);
     expect(actionRes.events[4].args._from).to.equal(a8.address);
-    expect(actionRes.events[4].args._to).to.equal(a3.address);
-    expect(actionRes.events[5].args._percentage).to.equal(2);
-    expect(actionRes.events[5].args._from).to.equal(a8.address);
-    expect(actionRes.events[5].args._to).to.equal(a2.address);
-    expect(actionRes.events[6].args._percentage).to.equal(1);
+    expect(actionRes.events[4].args._to).to.equal(a5.address);
+    expect(actionRes.events[6].args._percentage).to.equal(4);
     expect(actionRes.events[6].args._from).to.equal(a8.address);
-    expect(actionRes.events[6].args._to).to.equal(a1.address);
+    expect(actionRes.events[6].args._to).to.equal(a4.address);
+    expect(actionRes.events[8].args._percentage).to.equal(3);
+    expect(actionRes.events[8].args._from).to.equal(a8.address);
+    expect(actionRes.events[8].args._to).to.equal(a3.address);
+    expect(actionRes.events[10].args._percentage).to.equal(2);
+    expect(actionRes.events[10].args._from).to.equal(a8.address);
+    expect(actionRes.events[10].args._to).to.equal(a2.address);
+    expect(actionRes.events[12].args._percentage).to.equal(1);
+    expect(actionRes.events[12].args._from).to.equal(a8.address);
+    expect(actionRes.events[12].args._to).to.equal(a1.address);
   });
 
   // Single self invitation

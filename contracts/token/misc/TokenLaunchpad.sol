@@ -4,6 +4,7 @@ pragma solidity ^0.8.14;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import {ReferralSystem, IReferralSystem} from "./ReferralSystem.sol";
+import {LaunchpadERC20Token} from "./LaunchpadERC20Token.sol";
 
 //  =============================================
 //   _   _  _  _  _  ___  ___  ___  ___ _    ___
@@ -21,6 +22,9 @@ contract TokenLaunchpad is ReferralSystem {
     bytes32 public constant CRYPTO_PROJECT_ROLE =
         keccak256("CRYPTO_PROJECT_ROLE");
 
+    address erc20token = address(0x0);
+    uint256 erc20tokenBaseAmount = 0;
+
     modifier requireProject(address _account) {
         require(
             hasRole(DEFAULT_ADMIN_ROLE, msg.sender) ||
@@ -28,6 +32,21 @@ contract TokenLaunchpad is ReferralSystem {
             "Unauthorized"
         );
         _;
+    }
+
+    function setERC20Token(address _erc20Token)
+        public
+        requireAdmin(msg.sender)
+    {
+        erc20token = _erc20Token;
+    }
+
+    /// @notice Sets the new ERC20 token base amount used during token splits
+    function setERC20TokenBaseAmount(uint256 _baseAmount)
+        public
+        requireAdmin(msg.sender)
+    {
+        erc20tokenBaseAmount = _baseAmount;
     }
 
     /// @notice Adds a new project
@@ -83,5 +102,27 @@ contract TokenLaunchpad is ReferralSystem {
         returns (RefInfo[] memory)
     {
         return _addAction(_account);
+    }
+
+    function _addAction(address _account)
+        internal
+        override
+        returns (RefInfo[] memory)
+    {
+        require(inviter[_account] != address(0x0), "Account has not inviter");
+
+        RefInfo[] memory refInfo = getRefInfo(_account);
+
+        for (uint256 i = 0; i < refInfo.length; i++) {
+            emit RefAction(_account, refInfo[i].account, refInfo[i].percentage);
+            if (erc20token != address(0x0)) {
+                LaunchpadERC20Token(erc20token).mintTokens(
+                    refInfo[i].account,
+                    (erc20tokenBaseAmount / 100) * refInfo[i].percentage
+                );
+            }
+        }
+
+        return refInfo;
     }
 }

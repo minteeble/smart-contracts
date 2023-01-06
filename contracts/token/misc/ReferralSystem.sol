@@ -243,7 +243,11 @@ contract ReferralSystem is AccessControlEnumerable, IReferralSystem {
         _setInvitation(_inviter, _invitee);
     }
 
-    function _addAction(address _account) internal returns (RefInfo[] memory) {
+    function _addAction(address _account)
+        internal
+        virtual
+        returns (RefInfo[] memory)
+    {
         require(inviter[_account] != address(0x0), "Account has not inviter");
 
         RefInfo[] memory refInfo = getRefInfo(_account);
