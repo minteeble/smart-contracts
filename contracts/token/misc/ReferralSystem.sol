@@ -288,33 +288,63 @@ contract ReferralSystem is AccessControlEnumerable, IReferralSystem {
         view
         returns (RefInfo[] memory)
     {
-        uint256 rankIndex = accountRank[_account];
+        uint256 maxDepth = 10;
+        RefInfo[] memory refInfo = new RefInfo[](maxDepth);
 
-        RefInfo[] memory refInfo = new RefInfo[](
-            ranks[rankIndex].levels.length
-        );
+        // uint256 rankIndex = accountRank[_account];
+
+        // RefInfo[] memory refInfo = new RefInfo[](
+        //     ranks[rankIndex].levels.length
+        // );
+
         address currentAccount = _account;
-        uint256 levelsFound = 0;
+        uint256 accountsFound = 0;
 
         for (
-            levelsFound = 0;
-            levelsFound < ranks[rankIndex].levels.length;
-            levelsFound++
+            uint256 currentDepth = 1;
+            currentDepth <= maxDepth;
+            currentDepth++
         ) {
             address inviterAddr = inviter[currentAccount];
 
             if (inviterAddr != address(0)) {
-                refInfo[levelsFound] = RefInfo(
-                    inviterAddr,
-                    ranks[rankIndex].levels[levelsFound]
-                );
+                uint256 rankIndex = accountRank[inviterAddr];
+                uint256 rankDepth = ranks[rankIndex].levels.length;
+
+                if (rankDepth > 0 && currentDepth <= rankDepth) {
+                    refInfo[accountsFound] = RefInfo(
+                        inviterAddr,
+                        ranks[rankIndex].levels[currentDepth - 1]
+                    );
+
+                    accountsFound++;
+                }
+
                 currentAccount = inviterAddr;
             } else {
                 break;
             }
         }
 
-        RefInfo[] memory refInfoFound = new RefInfo[](levelsFound);
+        // for (
+        //     levelsFound = 0;
+        //     levelsFound < ranks[rankIndex].levels.length;
+        //     levelsFound++
+        // ) {
+        //     address inviterAddr = inviter[currentAccount];
+
+        //     if (inviterAddr != address(0)) {
+        //         refInfo[levelsFound] = RefInfo(
+        //             inviterAddr,
+        //             ranks[rankIndex].levels[levelsFound]
+        //         );
+        //         currentAccount = inviterAddr;
+        //     } else {
+        //         break;
+        //     }
+        // }
+
+        RefInfo[] memory refInfoFound = new RefInfo[](accountsFound);
 
         for (
             uint256 levelIndex = 0;
