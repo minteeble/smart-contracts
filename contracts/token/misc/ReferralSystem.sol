@@ -18,6 +18,7 @@ interface IReferralSystem {
     /// @dev Struct representing a Rank, so a list of percentages for levels
     struct Rank {
         uint256[] levels;
+        uint256 score;
     }
 
     /// @dev Struct representing a RefInfo, so a model used when asking info
@@ -41,6 +42,8 @@ interface IReferralSystem {
     function addRank() external;
 
     function removeRank() external;
+
+    function setRankScoreLimit(uint256 _rankIndex, uint256 _newScore) external;
 
     function addLevel(uint256 _rankIndex, uint256 _percentage) external;
 
@@ -131,7 +134,7 @@ contract ReferralSystem is AccessControlEnumerable, IReferralSystem {
     function addRank() public onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256[] memory levels;
 
-        ranks.push(Rank(levels));
+        ranks.push(Rank(levels, 0));
     }
 
     /// @notice Removes the last rank
@@ -140,6 +143,13 @@ contract ReferralSystem is AccessControlEnumerable, IReferralSystem {
 
         // Remove rank from top
         ranks.pop();
+    }
+
+    function setRankScoreLimit(uint256 _rankIndex, uint256 _newScore)
+        public
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        ranks[_rankIndex].score = _newScore;
     }
 
     /// @notice Adds a new level for the specified rank
@@ -198,7 +208,12 @@ contract ReferralSystem is AccessControlEnumerable, IReferralSystem {
         return inviter[_account];
     }
 
-    function accountRankOf(address _account) public view returns (uint256) {
+    function accountRankOf(address _account)
+        public
+        view
+        virtual
+        returns (uint256)
+    {
         return accountRank[_account];
     }
 
@@ -228,7 +243,7 @@ contract ReferralSystem is AccessControlEnumerable, IReferralSystem {
         );
 
         inviter[_invitee] = _inviter;
-        accountRank[_invitee] = accountRank[_inviter];
+        accountRank[_invitee] = accountRankOf(_inviter);
     }
 
     /// @notice Creates the invitation (relationship) between inviter and invitee.
@@ -302,7 +317,7 @@ contract ReferralSystem is AccessControlEnumerable, IReferralSystem {
             address inviterAddr = inviter[currentAccount];
 
             if (inviterAddr != address(0)) {
-                uint256 rankIndex = accountRank[inviterAddr];
+                uint256 rankIndex = accountRankOf(inviterAddr);
                 uint256 rankDepth = ranks[rankIndex].levels.length;
 
                 if (rankDepth > 0 && currentDepth <= rankDepth) {
