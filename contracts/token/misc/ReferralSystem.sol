@@ -291,12 +291,6 @@ contract ReferralSystem is AccessControlEnumerable, IReferralSystem {
         uint256 maxDepth = 10;
         RefInfo[] memory refInfo = new RefInfo[](maxDepth);
 
-        // uint256 rankIndex = accountRank[_account];
-
-        // RefInfo[] memory refInfo = new RefInfo[](
-        //     ranks[rankIndex].levels.length
-        // );
-
         address currentAccount = _account;
         uint256 accountsFound = 0;
 
@@ -325,24 +319,6 @@ contract ReferralSystem is AccessControlEnumerable, IReferralSystem {
                 break;
             }
         }
-
-        // for (
-        //     levelsFound = 0;
-        //     levelsFound < ranks[rankIndex].levels.length;
-        //     levelsFound++
-        // ) {
-        //     address inviterAddr = inviter[currentAccount];
-
-        //     if (inviterAddr != address(0)) {
-        //         refInfo[levelsFound] = RefInfo(
-        //             inviterAddr,
-        //             ranks[rankIndex].levels[levelsFound]
-        //         );
-        //         currentAccount = inviterAddr;
-        //     } else {
-        //         break;
-        //     }
-        // }
 
         RefInfo[] memory refInfoFound = new RefInfo[](accountsFound);
 
