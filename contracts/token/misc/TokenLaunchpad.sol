@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import {ReferralSystem, IReferralSystem} from "./ReferralSystem.sol";
 import {LaunchpadERC20Token} from "./LaunchpadERC20Token.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 //  =============================================
 //   _   _  _  _  _  ___  ___  ___  ___ _    ___
@@ -25,6 +26,8 @@ contract TokenLaunchpad is ReferralSystem {
     address erc20token = address(0x0);
     uint256 erc20tokenBaseAmount = 0;
 
+    bool dynamicRanks = false;
+
     modifier requireProject(address _account) {
         require(
             hasRole(DEFAULT_ADMIN_ROLE, msg.sender) ||
@@ -32,6 +35,19 @@ contract TokenLaunchpad is ReferralSystem {
             "Unauthorized"
         );
         _;
+    }
+
+    function accountRankOf(address _account)
+        public
+        view
+        override
+        returns (uint256)
+    {
+        uint256 tokenBalance = LaunchpadERC20Token(erc20token).balanceOf(
+            _account
+        );
+
+        // return accountRank[_account];
     }
 
     function setERC20Token(address _erc20Token)
