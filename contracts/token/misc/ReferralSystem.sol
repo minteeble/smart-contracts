@@ -243,7 +243,7 @@ contract ReferralSystem is AccessControlEnumerable, IReferralSystem {
         );
 
         inviter[_invitee] = _inviter;
-        accountRank[_invitee] = accountRankOf(_inviter);
+        // accountRank[_invitee] = accountRankOf(_inviter);
     }
 
     /// @notice Creates the invitation (relationship) between inviter and invitee.

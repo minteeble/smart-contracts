@@ -43,11 +43,24 @@ contract TokenLaunchpad is ReferralSystem {
         override
         returns (uint256)
     {
+        require(ranks.length > 0, "No ranks found");
+
+        // If rank is manually set, then return it
+        if (super.accountRankOf(_account) != 0 || erc20token == address(0))
+            return super.accountRankOf(_account);
+
+        // Else, evaluate it based on the token balance (referral score)
         uint256 tokenBalance = LaunchpadERC20Token(erc20token).balanceOf(
             _account
         );
 
-        // return accountRank[_account];
+        for (uint256 i = ranks.length - 1; i >= 0; i--) {
+            if (tokenBalance >= ranks[i].score) {
+                return i;
+            }
+        }
+
+        return 0;
     }
 
     function setERC20Token(address _erc20Token)
