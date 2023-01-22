@@ -117,12 +117,8 @@ describe("TokenLaunchpad", function () {
     const deployedLaunchpad = await launchpad.deploy();
     const deployedToken = await token.deploy("NAME", "SYMBOL", "10");
 
-    // console.log("LAUNCHPAD:", deployedLaunchpad.address);
-    // console.log("TOKEN:", deployedToken.address);
-    // console.log("ADMIN:", admin.address);
-
     await deployedLaunchpad.setERC20Token(deployedToken.address);
-
+    await deployedLaunchpad.setERC20TokenBaseAmount(1000);
     await deployedToken.grantRole(
       (await deployedToken.MINTER_ROLE()).toString(),
       deployedLaunchpad.address
@@ -254,6 +250,53 @@ describe("TokenLaunchpad", function () {
     expect(actionRes.events[12].args._percentage).to.equal(1);
     expect(actionRes.events[12].args._from).to.equal(a8.address);
     expect(actionRes.events[12].args._to).to.equal(a1.address);
+
+    expect(await deployedToken.balanceOf(a1.address)).to.equal("10");
+    expect(await deployedToken.balanceOf(a2.address)).to.equal("20");
+    expect(await deployedToken.balanceOf(a3.address)).to.equal("30");
+    expect(await deployedToken.balanceOf(a4.address)).to.equal("40");
+    expect(await deployedToken.balanceOf(a5.address)).to.equal("50");
+    expect(await deployedToken.balanceOf(a6.address)).to.equal("60");
+    expect(await deployedToken.balanceOf(a7.address)).to.equal("70");
+    expect(await deployedToken.balanceOf(a8.address)).to.equal("0");
+  });
+
+  it("Double dynamic levels", async function () {
+    const [admin, a1, a2, a3] = await ethers.getSigners();
+    const launchpad = await ethers.getContractFactory("TokenLaunchpad");
+    const token = await ethers.getContractFactory("LaunchpadERC20Token");
+
+    const deployedLaunchpad = await launchpad.deploy();
+    const deployedToken = await token.deploy("NAME", "SYMBOL", "10");
+
+    await deployedLaunchpad.setERC20Token(deployedToken.address);
+    await deployedLaunchpad.setERC20TokenBaseAmount("1000000000000000");
+
+    await deployedToken.grantRole(
+      (await deployedToken.MINTER_ROLE()).toString(),
+      deployedLaunchpad.address
+    );
+
+    await deployedLaunchpad.addRank();
+    await deployedLaunchpad.addLevel(0, 10);
+    await deployedLaunchpad.setRankScoreLimit(0, "0");
+    await deployedLaunchpad.addRank();
+    await deployedLaunchpad.addLevel(1, 5);
+    await deployedLaunchpad.addLevel(1, 2);
+    await deployedLaunchpad.setRankScoreLimit(1, "300000000000000");
+
+    await deployedLaunchpad.connect(a2).acceptInvitation(a1.address);
+    await deployedLaunchpad.connect(a3).acceptInvitation(a2.address);
+
+    await deployedLaunchpad.connect(admin).addAction(a2.address);
+    await deployedLaunchpad.connect(admin).addAction(a2.address);
+    await deployedLaunchpad.connect(admin).addAction(a2.address);
+    await deployedLaunchpad.connect(admin).addAction(a2.address);
+    await deployedLaunchpad.connect(admin).addAction(a3.address);
+
+    expect(await deployedLaunchpad.accountRankOf(a1.address)).to.equal("1");
+    expect(await deployedLaunchpad.accountRankOf(a2.address)).to.equal("0");
+    expect(await deployedLaunchpad.accountRankOf(a2.address)).to.equal("0");
   });
 
   // Single self invitation

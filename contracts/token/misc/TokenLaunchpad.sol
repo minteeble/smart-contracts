@@ -58,6 +58,8 @@ contract TokenLaunchpad is ReferralSystem {
             if (tokenBalance >= ranks[i].score) {
                 return i;
             }
+
+            if (i == 0) break;
         }
 
         return 0;
