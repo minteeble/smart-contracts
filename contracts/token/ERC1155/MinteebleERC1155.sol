@@ -14,8 +14,13 @@ pragma solidity ^0.8.14;
 
 import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract MinteebleERC1155 is ERC1155Supply, AccessControlEnumerable {
+contract MinteebleERC1155 is
+    ERC1155Supply,
+    AccessControlEnumerable,
+    ReentrancyGuard
+{
     uint256[] public ids;
     bool public dynamicIdsEnabled;
     string public name;
@@ -102,7 +107,7 @@ contract MinteebleERC1155 is ERC1155Supply, AccessControlEnumerable {
         address _recipientAccount,
         uint256 _id,
         uint256 _amount
-    ) public requireAdmin(msg.sender) idExists(_id) {
+    ) public requireAdmin(msg.sender) idExists(_id) nonReentrant {
         _mint(_recipientAccount, _id, _amount, "");
     }
 
@@ -110,6 +115,7 @@ contract MinteebleERC1155 is ERC1155Supply, AccessControlEnumerable {
         public
         requireAdmin(msg.sender)
         idExists(_id)
+        nonReentrant
     {
         for (uint256 i; i < _accounts.length; i++) {
             _mint(_accounts[i], _id, 1, "");
