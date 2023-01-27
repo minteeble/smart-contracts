@@ -18,10 +18,18 @@ import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 contract MinteebleERC1155 is ERC1155Supply, AccessControlEnumerable {
     uint256[] public ids;
     bool public dynamicIdsEnabled;
+    string public name;
+    string public symbol;
 
-    constructor(string memory _uri) ERC1155(_uri) {
+    constructor(
+        string memory _name,
+        string memory _symbol,
+        string memory _uri
+    ) ERC1155(_uri) {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         dynamicIdsEnabled = true;
+        name = _name;
+        symbol = _symbol;
     }
 
     modifier requireAdmin(address _account) {
@@ -61,6 +69,8 @@ contract MinteebleERC1155 is ERC1155Supply, AccessControlEnumerable {
 
         for (uint256 i = 0; i < ids.length; i++) {
             if (ids[i] == _id) {
+                require(totalSupply(_id) == 0, "Cannot delete id with supply");
+
                 ids[i] = ids[ids.length - 1];
                 delete ids[ids.length - 1];
                 ids.pop();
@@ -82,6 +92,10 @@ contract MinteebleERC1155 is ERC1155Supply, AccessControlEnumerable {
 
     function getIds() public view returns (uint256[] memory) {
         return ids;
+    }
+
+    function setURI(string memory _newUri) public requireAdmin(msg.sender) {
+        _setURI(_newUri);
     }
 
     function mintForAddress(

@@ -26,19 +26,28 @@ describe("MinteebleERC1155", function () {
   let accounts = [];
   let erc1155;
 
+  let deployToken = async () => {};
+
   before(async () => {
     refInterface = new ethers.utils.Interface(refContractInfo.abi);
 
     erc1155 = await ethers.getContractFactory("MinteebleERC1155");
     accounts = await ethers.getSigners();
+    deployToken = async () => {
+      return await erc1155.deploy(
+        "TokenName",
+        "TokenSymbol",
+        "https://example.com/{id}.json"
+      );
+    };
   });
 
   it("Deployment of a basic ERC1155 token", async function () {
-    await erc1155.deploy("https://example.com/{id}.json");
+    await deployToken();
   });
 
   it("No ids available at the beginning", async function () {
-    let token = await erc1155.deploy("https://example.com/{id}.json");
+    let token = await deployToken();
 
     let ids = await token.getIds();
 
@@ -46,7 +55,7 @@ describe("MinteebleERC1155", function () {
   });
 
   it("No ids available at the beginning", async function () {
-    let token = await erc1155.deploy("https://example.com/{id}.json");
+    let token = await deployToken();
 
     let ids = await token.getIds();
 
@@ -54,7 +63,7 @@ describe("MinteebleERC1155", function () {
   });
 
   it("Adding new ids from admin account", async function () {
-    let token = await erc1155.deploy("https://example.com/{id}.json");
+    let token = await deployToken();
 
     await token.addId(5);
     await token.addId(9);
@@ -67,7 +76,7 @@ describe("MinteebleERC1155", function () {
   });
 
   it("Removing new ids from admin account", async function () {
-    let token = await erc1155.deploy("https://example.com/{id}.json");
+    let token = await deployToken();
 
     await token.addId(5);
     await token.addId(9);
@@ -80,7 +89,7 @@ describe("MinteebleERC1155", function () {
   });
 
   it("Try removing new ids from non-admin account", async function () {
-    let token = await erc1155.deploy("https://example.com/{id}.json");
+    let token = await deployToken();
 
     await token.addId(5);
     await token.addId(9);
@@ -89,26 +98,34 @@ describe("MinteebleERC1155", function () {
   });
 
   it("Try adding new ids from non-admin account", async function () {
-    let token = await erc1155.deploy("https://example.com/{id}.json");
+    let token = await deployToken();
 
     await expectThrowsAsync(() => token.connect(accounts[1]).addId(6));
   });
 
   it("Try adding duplicate id", async function () {
-    let token = await erc1155.deploy("https://example.com/{id}.json");
+    let token = await deployToken();
 
     await token.addId(9);
     await expectThrowsAsync(() => token.addId(9));
   });
 
   it("Try removing non-existing id", async function () {
-    let token = await erc1155.deploy("https://example.com/{id}.json");
+    let token = await deployToken();
 
     await expectThrowsAsync(() => token.removeId(9));
   });
 
+  it("Try removing id with items already minted", async function () {
+    let token = await deployToken();
+
+    await token.addId(10);
+    await token.mintForAddress(accounts[1].address, 10, 4);
+    await expectThrowsAsync(() => token.removeId(10));
+  });
+
   it("Admin mints tokens for address", async function () {
-    let token = await erc1155.deploy("https://example.com/{id}.json");
+    let token = await deployToken();
 
     await token.addId(10);
     await token.mintForAddress(accounts[1].address, 10, 4);
@@ -117,7 +134,7 @@ describe("MinteebleERC1155", function () {
   });
 
   it("Admin try minting tokens with non existing ids", async function () {
-    let token = await erc1155.deploy("https://example.com/{id}.json");
+    let token = await deployToken();
 
     await token.addId(9);
 
@@ -127,8 +144,8 @@ describe("MinteebleERC1155", function () {
   });
 
   it("Admin triggers airdrop", async function () {
-    let token = await erc1155.deploy("https://example.com/{id}.json");
-    let id = 0x8975;
+    let token = await deployToken();
+    let id = 1;
 
     await token.addId(id);
     await token.airdrop(id, [
@@ -149,7 +166,7 @@ describe("MinteebleERC1155", function () {
   });
 
   it("Admin triggers airdrop with non existing-id", async function () {
-    let token = await erc1155.deploy("https://example.com/{id}.json");
+    let token = await deployToken();
     let id = 0x8975;
 
     await expectThrowsAsync(() =>
@@ -161,6 +178,24 @@ describe("MinteebleERC1155", function () {
         accounts[5].address,
         accounts[6].address,
       ])
+    );
+  });
+
+  it("Admin sets new uri", async function () {
+    let token = await deployToken();
+    let id = 0x8975;
+
+    await token.setURI("https://example2.com/{id}.json");
+
+    expect(await token.uri(id)).to.equal("https://example2.com/{id}.json");
+  });
+
+  it("Non-admin account try setting new uri", async function () {
+    let token = await deployToken();
+    let id = 0x8975;
+
+    await expectThrowsAsync(() =>
+      token.connect(accounts[1]).setURI("https://example2.com/{id}.json")
     );
   });
 });
