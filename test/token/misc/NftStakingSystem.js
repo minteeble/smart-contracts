@@ -80,6 +80,15 @@ describe("NftStakingSystem", function () {
     await contractsDeployment();
   });
 
+  it("Single item staking", async function () {
+    await nftCollectionInstance.ownerMintForAddress(1, accounts[1].address);
+    await nftCollectionInstance.connect(accounts[1]).approve(stakingSystemInstance.address, 1);
+    await stakingSystemInstance.connect(accounts[1]).stake(1);
+
+    expect(await stakingSystemInstance.stakerAddress(1)).to.equal(accounts[1].address);
+
+  });
+
 
 
 });
