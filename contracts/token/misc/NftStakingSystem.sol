@@ -20,8 +20,7 @@ contract NftStakingSystem is AccessControlEnumerable {
     IERC721 public nftCollection;
     NftStakingERC20Token public rewardToken;
 
-    bool public initialized;
-    uint256 public initTimestamp;
+    bool public systemPaused;
 
     struct StakerInfo {
         uint256 amountStaked;
@@ -40,12 +39,14 @@ contract NftStakingSystem is AccessControlEnumerable {
 
     mapping(uint256 => address) public stakerAddress;
 
-    uint256 private rewardsPerHour = 100000;
+    uint256 public rewardsPerHour = 100000;
+
+    uint256 public timeUnit = 3600;
 
     constructor(IERC721 _nftCollection, NftStakingERC20Token _rewardToken) {
         nftCollection = _nftCollection;
         rewardToken = _rewardToken;
-        initialized = true;
+        systemPaused = false;
 
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
@@ -55,32 +56,71 @@ contract NftStakingSystem is AccessControlEnumerable {
         _;
     }
 
-    modifier systemInitialized() {
-        require(initialized, "System is not initialized yet");
+    modifier systemActive() {
+        require(!systemPaused, "System is paused");
         _;
     }
 
-    function initializeSystem() public requireAdmin(msg.sender) {
-        require(!initialized, "System already initialized");
-        initTimestamp = block.timestamp;
-        initialized = true;
+    function setSystemPaused(bool _systemPaused)
+        public
+        requireAdmin(msg.sender)
+    {
+        systemPaused = _systemPaused;
     }
 
-    function setRewardPerHour(uint256 _rewardsPerHour)
+    function setRewardPerTimeUnit(uint256 _rewardsPerHour)
         public
         requireAdmin(msg.sender)
     {
         rewardsPerHour = _rewardsPerHour;
     }
 
+    function setTimeunit(uint256 _timeUnit) public requireAdmin(msg.sender) {
+        timeUnit = _timeUnit;
+    }
+
     function calculateRewards(address _account) public view returns (uint256) {
         return
             ((stakers[_account].amountStaked *
                 (block.timestamp - stakers[_account].lastClaimTimestamp)) /
-                3600) * rewardsPerHour;
+                timeUnit) * rewardsPerHour;
     }
 
-    function _stake(address _account, uint256 _id) internal systemInitialized {
+    function calculateClaimableReward(address _account)
+        public
+        view
+        returns (uint256)
+    {
+        return stakers[_account].unclaimedRewards + calculateRewards(_account);
+    }
+
+    function claim(address _account) public {
+        uint256 rewardAmount = calculateClaimableReward(_account);
+
+        rewardToken.mintTokens(_account, rewardAmount);
+        stakers[_account].unclaimedRewards = 0;
+        stakers[_account].lastClaimTimestamp = block.timestamp;
+    }
+
+    function getAccountStakedIds(address _account)
+        public
+        view
+        returns (uint256[] memory)
+    {
+        return stakers[_account].stakedIds;
+    }
+
+    function getAccountStakedIdsAtIndex(address _account, uint256 _idIndex)
+        public
+        view
+        returns (uint256)
+    {
+        require(_idIndex < stakers[_account].stakedIds.length, "Invalid index");
+
+        return stakers[_account].stakedIds[_idIndex];
+    }
+
+    function _stake(address _account, uint256 _id) internal systemActive {
         require(
             nftCollection.ownerOf(_id) == _account,
             "Account must be token owner"
@@ -102,7 +142,30 @@ contract NftStakingSystem is AccessControlEnumerable {
         _stake(msg.sender, _id);
     }
 
-    function _unstake(uint256 _id) internal systemInitialized {}
+    function _unstake(uint256 _id) internal {
+        require(stakerAddress[_id] != address(0x0), "Token is not staked");
+
+        address stakerAccount = stakerAddress[_id];
+
+        stakers[stakerAccount].unclaimedRewards += calculateRewards(
+            stakerAccount
+        );
+
+        for (uint256 i = 0; i < stakers[stakerAccount].stakedIds.length; i++) {
+            if (stakers[stakerAccount].stakedIds[i] == _id) {
+                stakers[stakerAccount].stakedIds[i] = stakers[stakerAccount]
+                    .stakedIds[i - 1];
+                delete stakers[stakerAccount].stakedIds[i];
+                stakers[stakerAccount].stakedIds.pop();
+            }
+        }
+
+        stakers[stakerAccount].amountStaked--;
+        stakerAddress[_id] = address(0x0);
+        stakers[stakerAccount].lastClaimTimestamp = block.timestamp;
+
+        nftCollection.safeTransferFrom(address(this), stakerAccount, _id, "");
+    }
 
     function unstake(uint256 _id) public {
         _unstake(_id);
