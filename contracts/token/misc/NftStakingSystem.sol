@@ -94,12 +94,26 @@ contract NftStakingSystem is AccessControlEnumerable {
         return stakers[_account].unclaimedRewards + calculateRewards(_account);
     }
 
-    function claim(address _account) public {
+    function getUnclaimedReward(address _account)
+        public
+        view
+        returns (uint256)
+    {
+        return stakers[_account].unclaimedRewards;
+    }
+
+    function _claim(address _account) internal {
         uint256 rewardAmount = calculateClaimableReward(_account);
+
+        require(rewardAmount > 0, "No reward available to claim");
 
         rewardToken.mintTokens(_account, rewardAmount);
         stakers[_account].unclaimedRewards = 0;
         stakers[_account].lastClaimTimestamp = block.timestamp;
+    }
+
+    function claim(address _account) public {
+        _claim(_account);
     }
 
     function getAccountStakedIds(address _account)
@@ -118,6 +132,14 @@ contract NftStakingSystem is AccessControlEnumerable {
         require(_idIndex < stakers[_account].stakedIds.length, "Invalid index");
 
         return stakers[_account].stakedIds[_idIndex];
+    }
+
+    function getAccountStakedItemsAmount(address _account)
+        public
+        view
+        returns (uint256)
+    {
+        return stakers[_account].amountStaked;
     }
 
     function _stake(address _account, uint256 _id) internal systemActive {
@@ -154,7 +176,7 @@ contract NftStakingSystem is AccessControlEnumerable {
         for (uint256 i = 0; i < stakers[stakerAccount].stakedIds.length; i++) {
             if (stakers[stakerAccount].stakedIds[i] == _id) {
                 stakers[stakerAccount].stakedIds[i] = stakers[stakerAccount]
-                    .stakedIds[i - 1];
+                    .stakedIds[stakers[stakerAccount].stakedIds.length - 1];
                 delete stakers[stakerAccount].stakedIds[i];
                 stakers[stakerAccount].stakedIds.pop();
             }
@@ -168,6 +190,11 @@ contract NftStakingSystem is AccessControlEnumerable {
     }
 
     function unstake(uint256 _id) public {
+        require(
+            stakerAddress[_id] == msg.sender,
+            "Item is not staked by the caller account."
+        );
+
         _unstake(_id);
     }
 }
