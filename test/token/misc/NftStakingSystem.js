@@ -99,7 +99,7 @@ describe("NftStakingSystem", function () {
     await nftCollectionInstance
       .connect(accounts[1])
       .approve(stakingSystemInstance.address, 1);
-    await stakingSystemInstance.connect(accounts[1]).stake(1);
+    await stakingSystemInstance.connect(accounts[1]).stake(1, 0);
 
     expect(await stakingSystemInstance.stakerAddress(1)).to.equal(
       accounts[1].address
@@ -111,7 +111,7 @@ describe("NftStakingSystem", function () {
     await nftCollectionInstance
       .connect(accounts[1])
       .approve(stakingSystemInstance.address, 1);
-    await stakingSystemInstance.connect(accounts[1]).stake(1);
+    await stakingSystemInstance.connect(accounts[1]).stake(1, 0);
 
     await stakingSystemInstance.connect(accounts[1]).unstake(1);
 
@@ -134,10 +134,10 @@ describe("NftStakingSystem", function () {
     await nftCollectionInstance
       .connect(accounts[1])
       .approve(stakingSystemInstance.address, 4);
-    await stakingSystemInstance.connect(accounts[1]).stake(1);
-    await stakingSystemInstance.connect(accounts[1]).stake(2);
-    await stakingSystemInstance.connect(accounts[1]).stake(3);
-    await stakingSystemInstance.connect(accounts[1]).stake(4);
+    await stakingSystemInstance.connect(accounts[1]).stake(1, 0);
+    await stakingSystemInstance.connect(accounts[1]).stake(2, 0);
+    await stakingSystemInstance.connect(accounts[1]).stake(3, 0);
+    await stakingSystemInstance.connect(accounts[1]).stake(4, 0);
 
     expect(await stakingSystemInstance.stakerAddress(1)).to.equal(
       accounts[1].address
@@ -179,10 +179,10 @@ describe("NftStakingSystem", function () {
     await nftCollectionInstance
       .connect(accounts[1])
       .approve(stakingSystemInstance.address, 4);
-    await stakingSystemInstance.connect(accounts[1]).stake(1);
-    await stakingSystemInstance.connect(accounts[1]).stake(2);
-    await stakingSystemInstance.connect(accounts[1]).stake(3);
-    await stakingSystemInstance.connect(accounts[1]).stake(4);
+    await stakingSystemInstance.connect(accounts[1]).stake(1, 0);
+    await stakingSystemInstance.connect(accounts[1]).stake(2, 0);
+    await stakingSystemInstance.connect(accounts[1]).stake(3, 0);
+    await stakingSystemInstance.connect(accounts[1]).stake(4, 0);
 
     await stakingSystemInstance.connect(accounts[1]).unstake(1);
     await stakingSystemInstance.connect(accounts[1]).unstake(2);
@@ -210,7 +210,7 @@ describe("NftStakingSystem", function () {
 
   it("Trying to stake a non existing id", async () => {
     await expectThrowsAsync(() =>
-      stakingSystemInstance.connect(accounts[1]).stake(1)
+      stakingSystemInstance.connect(accounts[1]).stake(1, 0)
     );
   });
 
@@ -218,7 +218,7 @@ describe("NftStakingSystem", function () {
     await nftCollectionInstance.ownerMintForAddress(1, accounts[2].address);
 
     await expectThrowsAsync(() =>
-      stakingSystemInstance.connect(accounts[1]).stake(1)
+      stakingSystemInstance.connect(accounts[1]).stake(1, 0)
     );
   });
 
@@ -227,7 +227,7 @@ describe("NftStakingSystem", function () {
     await nftCollectionInstance
       .connect(accounts[1])
       .approve(stakingSystemInstance.address, 1);
-    await stakingSystemInstance.connect(accounts[1]).stake(1);
+    await stakingSystemInstance.connect(accounts[1]).stake(1, 0);
 
     await expectThrowsAsync(() =>
       stakingSystemInstance.connect(accounts[1]).unstake(2)
@@ -239,7 +239,7 @@ describe("NftStakingSystem", function () {
     await nftCollectionInstance
       .connect(accounts[1])
       .approve(stakingSystemInstance.address, 1);
-    await stakingSystemInstance.connect(accounts[1]).stake(1);
+    await stakingSystemInstance.connect(accounts[1]).stake(1, 0);
 
     await expectThrowsAsync(() =>
       stakingSystemInstance.connect(accounts[1]).unstake(2)
@@ -251,20 +251,19 @@ describe("NftStakingSystem", function () {
     await nftCollectionInstance
       .connect(accounts[1])
       .approve(stakingSystemInstance.address, 1);
-    await stakingSystemInstance.connect(accounts[1]).stake(1);
+    await stakingSystemInstance.connect(accounts[1]).stake(1, 0);
 
     await expectThrowsAsync(() =>
       stakingSystemInstance.connect(accounts[2]).unstake(1)
     );
   });
 
-
   it("Calculate claimable reward after 1 hour", async () => {
     await nftCollectionInstance.ownerMintForAddress(3, accounts[1].address);
     await nftCollectionInstance
       .connect(accounts[1])
       .approve(stakingSystemInstance.address, 1);
-    await stakingSystemInstance.connect(accounts[1]).stake(1);
+    await stakingSystemInstance.connect(accounts[1]).stake(1, 0);
 
     expect(await stakingSystemInstance.calculateClaimableReward(accounts[1].address)).to.equal("0");
     expect(await stakingSystemInstance.getUnclaimedReward(accounts[1].address)).to.equal("0");
@@ -276,7 +275,7 @@ describe("NftStakingSystem", function () {
     await nftCollectionInstance
       .connect(accounts[1])
       .approve(stakingSystemInstance.address, 2);
-    await stakingSystemInstance.connect(accounts[1]).stake(2);
+    await stakingSystemInstance.connect(accounts[1]).stake(2, 0);
 
     expect(await stakingSystemInstance.calculateClaimableReward(accounts[1].address)).to.equal("100000");
     expect(await stakingSystemInstance.getUnclaimedReward(accounts[1].address)).to.equal("100000");
@@ -303,6 +302,74 @@ describe("NftStakingSystem", function () {
 
   });
 
+  it("Trying to stake two times the same token without unstaking it", async () => {
+    await nftCollectionInstance.ownerMintForAddress(1, accounts[1].address);
+    await nftCollectionInstance
+      .connect(accounts[1])
+      .approve(stakingSystemInstance.address, 1);
+    await stakingSystemInstance.connect(accounts[1]).stake(1, 0);
+    await expectThrowsAsync(() => stakingSystemInstance.connect(accounts[1]).stake(1, 0));
+
+    expect(await stakingSystemInstance.stakerAddress(1)).to.equal(
+      accounts[1].address
+    );
+  });
+
+  it("Trying two times the staking-unstaking cycle", async () => {
+    await nftCollectionInstance.ownerMintForAddress(1, accounts[1].address);
+    await nftCollectionInstance
+      .connect(accounts[1])
+      .approve(stakingSystemInstance.address, 1);
+    await stakingSystemInstance.connect(accounts[1]).stake(1, 0);
+    await stakingSystemInstance.connect(accounts[1]).unstake(1);
+
+    await nftCollectionInstance
+      .connect(accounts[1])
+      .approve(stakingSystemInstance.address, 1);
+    await stakingSystemInstance.connect(accounts[1]).stake(1, 0);
+    await stakingSystemInstance.connect(accounts[1]).unstake(1);
+
+    expect(await stakingSystemInstance.stakerAddress(1)).to.equal(
+      "0x0000000000000000000000000000000000000000"
+    );
+  });
+
+  it("Trying to pass 0 as minPeriod in static staking", async () => {
+    await nftCollectionInstance.ownerMintForAddress(1, accounts[1].address);
+    await nftCollectionInstance
+      .connect(accounts[1])
+      .approve(stakingSystemInstance.address, 1);
+
+    await stakingSystemInstance.setStakingMode(0);
+    await expectThrowsAsync(() => stakingSystemInstance.connect(accounts[1]).stake(1, 0));
+  });
+
+  it("Trying to pass a non-zero minPeriod without waiting for unstaking", async () => {
+    await nftCollectionInstance.ownerMintForAddress(1, accounts[1].address);
+    await nftCollectionInstance
+      .connect(accounts[1])
+      .approve(stakingSystemInstance.address, 1);
+
+    await stakingSystemInstance.setStakingMode(0);
+    await stakingSystemInstance.connect(accounts[1]).stake(1, 3600);
+
+    await expectThrowsAsync(() => stakingSystemInstance.connect(accounts[1]).unstake(1));
+  });
+
+
+  it("Trying to pass a non-zero minPeriod without waiting for unstaking", async () => {
+    await nftCollectionInstance.ownerMintForAddress(1, accounts[1].address);
+    await nftCollectionInstance
+      .connect(accounts[1])
+      .approve(stakingSystemInstance.address, 1);
+
+    await stakingSystemInstance.setStakingMode(0);
+    await stakingSystemInstance.connect(accounts[1]).stake(1, 3600);
+    await helpers.time.increase(3599);
+    await expectThrowsAsync(() => stakingSystemInstance.connect(accounts[1]).unstake(1));
+    await helpers.time.increase(1);
+    await stakingSystemInstance.connect(accounts[1]).unstake(1);
+  });
 
 
 

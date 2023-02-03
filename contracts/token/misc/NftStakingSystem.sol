@@ -22,6 +22,13 @@ contract NftStakingSystem is AccessControlEnumerable {
 
     bool public systemPaused;
 
+    enum StakingMode {
+        STATIC_MODE,
+        DYNAMIC_MODE
+    }
+
+    StakingMode public stakingMode;
+
     struct StakerInfo {
         uint256 amountStaked;
         uint256[] stakedIds;
@@ -31,6 +38,7 @@ contract NftStakingSystem is AccessControlEnumerable {
 
     struct StakedTokenInfo {
         uint256 minPeriod;
+        uint256 startTimestamp;
     }
 
     mapping(uint256 => StakedTokenInfo) public stakedTokens;
@@ -47,6 +55,7 @@ contract NftStakingSystem is AccessControlEnumerable {
         nftCollection = _nftCollection;
         rewardToken = _rewardToken;
         systemPaused = false;
+        stakingMode = StakingMode.DYNAMIC_MODE;
 
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
@@ -59,6 +68,10 @@ contract NftStakingSystem is AccessControlEnumerable {
     modifier systemActive() {
         require(!systemPaused, "System is paused");
         _;
+    }
+
+    function setStakingMode(StakingMode _mode) public requireAdmin(msg.sender) {
+        stakingMode = _mode;
     }
 
     function setSystemPaused(bool _systemPaused)
@@ -142,11 +155,17 @@ contract NftStakingSystem is AccessControlEnumerable {
         return stakers[_account].amountStaked;
     }
 
-    function _stake(address _account, uint256 _id) internal systemActive {
+    function _stake(
+        address _account,
+        uint256 _id,
+        uint256 _minPeriod
+    ) internal systemActive {
         require(
             nftCollection.ownerOf(_id) == _account,
             "Account must be token owner"
         );
+
+        require(stakerAddress[_id] == address(0x0), "Token is already staked");
 
         if (stakers[_account].amountStaked > 0) {
             stakers[_account].unclaimedRewards += calculateRewards(_account);
@@ -154,14 +173,21 @@ contract NftStakingSystem is AccessControlEnumerable {
 
         nftCollection.transferFrom(_account, address(this), _id);
 
+        stakedTokens[_id].minPeriod = _minPeriod;
+        stakedTokens[_id].startTimestamp = block.timestamp;
+
         stakerAddress[_id] = _account;
         stakers[_account].stakedIds.push(_id);
         stakers[_account].amountStaked++;
         stakers[_account].lastClaimTimestamp = block.timestamp;
     }
 
-    function stake(uint256 _id) public {
-        _stake(msg.sender, _id);
+    function stake(uint256 _id, uint256 _minPeriod) public {
+        if (stakingMode == StakingMode.STATIC_MODE) {
+            require(_minPeriod > 0, "Provided period must be non-zero");
+        }
+
+        _stake(msg.sender, _id, _minPeriod);
     }
 
     function _unstake(uint256 _id) internal {
@@ -186,6 +212,9 @@ contract NftStakingSystem is AccessControlEnumerable {
         stakerAddress[_id] = address(0x0);
         stakers[stakerAccount].lastClaimTimestamp = block.timestamp;
 
+        stakedTokens[_id].startTimestamp = 0;
+        stakedTokens[_id].minPeriod = 0;
+
         nftCollection.safeTransferFrom(address(this), stakerAccount, _id, "");
     }
 
@@ -193,6 +222,11 @@ contract NftStakingSystem is AccessControlEnumerable {
         require(
             stakerAddress[_id] == msg.sender,
             "Item is not staked by the caller account."
+        );
+
+        require(
+            (block.timestamp - stakedTokens[_id].startTimestamp) >
+                stakedTokens[_id].minPeriod
         );
 
         _unstake(_id);
