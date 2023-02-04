@@ -357,7 +357,7 @@ describe("NftStakingSystem", function () {
   });
 
 
-  it("Trying to pass a non-zero minPeriod without waiting for unstaking", async () => {
+  it("Trying to pass a non-zero minPeriod and unstaking", async () => {
     await nftCollectionInstance.ownerMintForAddress(1, accounts[1].address);
     await nftCollectionInstance
       .connect(accounts[1])
