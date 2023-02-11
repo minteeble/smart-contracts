@@ -204,7 +204,8 @@ contract MinteebleERC721A is MinteeblePartialERC721, ERC721A, ReentrancyGuard {
      * @notice Mints item for another address. (Reserved to contract owner)
      */
     function ownerMintForAddress(uint256 _mintAmount, address _receiver)
-        public
+        public 
+        virtual
         onlyOwner
     {
         require(totalSupply() + _mintAmount <= maxSupply, "Max supply exceed!");
