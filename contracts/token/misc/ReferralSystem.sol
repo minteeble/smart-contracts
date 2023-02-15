@@ -64,7 +64,9 @@ interface IReferralSystem {
 
     function setInvitation(address _inviter, address _invitee) external;
 
-    function addAction(address _account) external returns (RefInfo[] memory);
+    function addAction(address _account, uint256 _itemsAmount)
+        external
+        returns (RefInfo[] memory);
 
     function hasInviter(address _account) external view returns (bool);
 }
@@ -82,7 +84,12 @@ contract ReferralSystem is AccessControlEnumerable, IReferralSystem {
     mapping(address => uint256) internal accountRank;
     Rank[] internal ranks;
 
-    event RefAction(address _from, address indexed _to, uint256 _percentage);
+    event RefAction(
+        address _from,
+        address indexed _to,
+        uint256 _percentage,
+        uint256 _items
+    );
 
     constructor() {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -150,6 +157,14 @@ contract ReferralSystem is AccessControlEnumerable, IReferralSystem {
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
         ranks[_rankIndex].score = _newScore;
+    }
+
+    function getRankScoreLimit(uint256 _rankIndex)
+        public
+        view
+        returns (uint256)
+    {
+        return ranks[_rankIndex].score;
     }
 
     /// @notice Adds a new level for the specified rank
@@ -258,7 +273,7 @@ contract ReferralSystem is AccessControlEnumerable, IReferralSystem {
         _setInvitation(_inviter, _invitee);
     }
 
-    function _addAction(address _account)
+    function _addAction(address _account, uint256 _itemsAmount)
         internal
         virtual
         returns (RefInfo[] memory)
@@ -268,7 +283,12 @@ contract ReferralSystem is AccessControlEnumerable, IReferralSystem {
         RefInfo[] memory refInfo = getRefInfo(_account);
 
         for (uint256 i = 0; i < refInfo.length; i++) {
-            emit RefAction(_account, refInfo[i].account, refInfo[i].percentage);
+            emit RefAction(
+                _account,
+                refInfo[i].account,
+                refInfo[i].percentage,
+                _itemsAmount
+            );
         }
 
         return refInfo;
@@ -278,13 +298,13 @@ contract ReferralSystem is AccessControlEnumerable, IReferralSystem {
     /// @dev Emits the events for each account above the one provided
     /// @param _account Account address that is committing the action
     /// @return The list of referral info for all the accounts above the one provided
-    function addAction(address _account)
+    function addAction(address _account, uint256 _itemsAmount)
         public
         virtual
         requireAdmin(msg.sender)
         returns (RefInfo[] memory)
     {
-        return _addAction(_account);
+        return _addAction(_account, _itemsAmount);
     }
 
     /// @notice Checks if the specified address has an inviter or not

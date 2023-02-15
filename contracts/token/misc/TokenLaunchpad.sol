@@ -126,16 +126,16 @@ contract TokenLaunchpad is ReferralSystem {
         _setInvitation(_inviter, _invitee);
     }
 
-    function addAction(address _account)
+    function addAction(address _account, uint256 _itemsAmount)
         public
         override
         requireProject(msg.sender)
         returns (RefInfo[] memory)
     {
-        return _addAction(_account);
+        return _addAction(_account, _itemsAmount);
     }
 
-    function _addAction(address _account)
+    function _addAction(address _account, uint256 _itemsAmount)
         internal
         override
         returns (RefInfo[] memory)
@@ -145,11 +145,18 @@ contract TokenLaunchpad is ReferralSystem {
         RefInfo[] memory refInfo = getRefInfo(_account);
 
         for (uint256 i = 0; i < refInfo.length; i++) {
-            emit RefAction(_account, refInfo[i].account, refInfo[i].percentage);
+            emit RefAction(
+                _account,
+                refInfo[i].account,
+                refInfo[i].percentage,
+                _itemsAmount
+            );
             if (erc20token != address(0x0)) {
                 LaunchpadERC20Token(erc20token).mintTokens(
                     refInfo[i].account,
-                    (erc20tokenBaseAmount / 100) * refInfo[i].percentage
+                    (erc20tokenBaseAmount / 100) *
+                        refInfo[i].percentage *
+                        _itemsAmount
                 );
             }
         }

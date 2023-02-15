@@ -510,7 +510,7 @@ describe("ReferralSystem", function () {
     await hardhatReferralSystem.addLevel(0, 8);
 
     await hardhatReferralSystem.setInvitation(owner.address, account2.address);
-    let action1Trx = await hardhatReferralSystem.addAction(account2.address);
+    let action1Trx = await hardhatReferralSystem.addAction(account2.address, 1);
     let action1Data = await refInterface.decodeFunctionData(
       "addAction",
       action1Trx.data
@@ -520,7 +520,7 @@ describe("ReferralSystem", function () {
       account2.address,
       account3.address
     );
-    let action2Trx = await hardhatReferralSystem.addAction(account3.address);
+    let action2Trx = await hardhatReferralSystem.addAction(account3.address, 1);
     let trxExec = await action2Trx.wait();
     let action2Data = await refInterface.decodeFunctionData(
       "addAction",
@@ -528,7 +528,7 @@ describe("ReferralSystem", function () {
     );
     // console.log(action2Trx, trxExec.events[0].args, action2Data);
 
-    let action3Trx = await hardhatReferralSystem.addAction(account3.address);
+    let action3Trx = await hardhatReferralSystem.addAction(account3.address, 1);
     let action3Data = await action3Trx.wait();
 
     // console.log(action1Data, action2Data, action3Data);

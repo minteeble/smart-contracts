@@ -16,4 +16,8 @@ import {ReferralSystemConsumer} from "./ReferralSystemConsumer.sol";
 
 abstract contract TokenLaunchpadProject is ReferralSystemConsumer {
     constructor() ReferralSystemConsumer() {}
+
+    function _setLaunchpad(address _launchpadAddress) internal {
+        _setReferral(_launchpadAddress);
+    }
 }

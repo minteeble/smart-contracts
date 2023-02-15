@@ -32,10 +32,11 @@ abstract contract ReferralSystemConsumer {
 
     function _executeReferralAction(
         uint256 _balanceToRedistribute,
-        address _account
+        address _account,
+        uint256 _itemsAmount
     ) internal referralSet returns (uint256 usedBalance) {
         ReferralSystem.RefInfo[] memory refInfo = ReferralSystem(referral)
-            .addAction(_account);
+            .addAction(_account, _itemsAmount);
 
         return _redistributeReferralBalance(_balanceToRedistribute, refInfo);
     }

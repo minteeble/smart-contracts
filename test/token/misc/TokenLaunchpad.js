@@ -225,7 +225,7 @@ describe("TokenLaunchpad", function () {
     expect(a8Ref[6]["account"].toString()).to.equal(a1.address);
 
     let actionRes = await (
-      await deployedLaunchpad.connect(admin).addAction(a8.address)
+      await deployedLaunchpad.connect(admin).addAction(a8.address, 1)
     ).wait();
 
     expect(actionRes.events.length).to.equal(7 * 2);
@@ -288,11 +288,11 @@ describe("TokenLaunchpad", function () {
     await deployedLaunchpad.connect(a2).acceptInvitation(a1.address);
     await deployedLaunchpad.connect(a3).acceptInvitation(a2.address);
 
-    await deployedLaunchpad.connect(admin).addAction(a2.address);
-    await deployedLaunchpad.connect(admin).addAction(a2.address);
-    await deployedLaunchpad.connect(admin).addAction(a2.address);
-    await deployedLaunchpad.connect(admin).addAction(a2.address);
-    await deployedLaunchpad.connect(admin).addAction(a3.address);
+    await deployedLaunchpad.connect(admin).addAction(a2.address, 1);
+    await deployedLaunchpad.connect(admin).addAction(a2.address, 1);
+    await deployedLaunchpad.connect(admin).addAction(a2.address, 1);
+    await deployedLaunchpad.connect(admin).addAction(a2.address, 1);
+    await deployedLaunchpad.connect(admin).addAction(a3.address, 1);
 
     expect(await deployedLaunchpad.accountRankOf(a1.address)).to.equal("1");
     expect(await deployedLaunchpad.accountRankOf(a2.address)).to.equal("0");
