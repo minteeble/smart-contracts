@@ -14,6 +14,6 @@ import {ReferralSystemConsumer} from "./ReferralSystemConsumer.sol";
 //
 //  =============================================
 
-contract TokenLaunchpadProject is ReferralSystemConsumer {
+abstract contract TokenLaunchpadProject is ReferralSystemConsumer {
     constructor() ReferralSystemConsumer() {}
 }

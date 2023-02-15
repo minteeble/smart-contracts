@@ -14,7 +14,7 @@ import {ReferralSystem} from "./ReferralSystem.sol";
 //
 //  =============================================
 
-contract ReferralSystemConsumer {
+abstract contract ReferralSystemConsumer {
     address public referral;
 
     constructor() {
