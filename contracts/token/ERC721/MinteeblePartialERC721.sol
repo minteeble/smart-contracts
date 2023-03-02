@@ -110,7 +110,7 @@ abstract contract MinteeblePartialERC721 is Ownable {
     /**
      *  @notice Withdraws contract balance to onwer account
      */
-    function withdrawBalance() public onlyOwner {
+    function withdrawBalance() public virtual onlyOwner {
         (bool success, ) = payable(owner()).call{value: address(this).balance}(
             ""
         );
