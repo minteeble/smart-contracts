@@ -20,10 +20,43 @@ import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "./MinteeblePartialERC721.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
+interface IMinteebleERC721A is IMinteeblePartialERC721, IERC721A {
+    function setWhitelistMaxMintAmountPerTrx(uint256 _maxAmount) external;
+
+    function setWhitelistMaxMintAmountPerAddress(uint256 _maxAmount) external;
+
+    function setWhitelistMintEnabled(bool _state) external;
+
+    function setMerkleRoot(bytes32 _merkleRoot) external;
+
+    function whitelistMint(
+        uint256 _mintAmount,
+        bytes32[] calldata _merkleProof
+    ) external;
+
+    function mint(uint256 _mintAmount) external payable;
+
+    function mintForAddress(
+        address receiver,
+        uint256 _mintAmount
+    ) external payable;
+
+    function ownerMintForAddress(
+        uint256 _mintAmount,
+        address _receiver
+    ) external;
+
+    function walletOfOwner(
+        address _owner
+    ) external view returns (uint256[] memory);
+}
+
 contract MinteebleERC721A is MinteeblePartialERC721, ERC721A, ReentrancyGuard {
     using Counters for Counters.Counter;
     using Strings for uint256;
 
+    bytes4 public constant IMINTEEBLE_ERC721A_INTERFACE_ID =
+        type(IMinteebleERC721A).interfaceId;
     bool public whitelistMintEnabled = false;
     bytes32 public merkleRoot;
 
@@ -84,10 +117,9 @@ contract MinteebleERC721A is MinteeblePartialERC721, ERC721A, ReentrancyGuard {
      *  @notice Allows owner to set the max number of mintable items in a single transaction
      *  @param _maxAmount Max amount
      */
-    function setWhitelistMaxMintAmountPerTrx(uint256 _maxAmount)
-        public
-        onlyOwner
-    {
+    function setWhitelistMaxMintAmountPerTrx(
+        uint256 _maxAmount
+    ) public onlyOwner {
         maxWhitelistMintAmountPerTrx = _maxAmount;
     }
 
@@ -95,10 +127,9 @@ contract MinteebleERC721A is MinteeblePartialERC721, ERC721A, ReentrancyGuard {
      *  @notice Allows owner to set the max number of mintable items per account
      *  @param _maxAmount Max amount
      */
-    function setWhitelistMaxMintAmountPerAddress(uint256 _maxAmount)
-        public
-        onlyOwner
-    {
+    function setWhitelistMaxMintAmountPerAddress(
+        uint256 _maxAmount
+    ) public onlyOwner {
         maxWhitelistMintAmountPerAddress = _maxAmount;
     }
 
@@ -127,13 +158,9 @@ contract MinteebleERC721A is MinteeblePartialERC721, ERC721A, ReentrancyGuard {
     /**
      *  @inheritdoc ERC721A
      */
-    function tokenURI(uint256 _tokenId)
-        public
-        view
-        virtual
-        override
-        returns (string memory)
-    {
+    function tokenURI(
+        uint256 _tokenId
+    ) public view virtual override returns (string memory) {
         require(_exists(_tokenId), "Token ID do es not exist.");
 
         // Checks if collection is revealed
@@ -143,7 +170,10 @@ contract MinteebleERC721A is MinteeblePartialERC721, ERC721A, ReentrancyGuard {
         return string.concat(_baseURI(), _tokenId.toString(), uriSuffix);
     }
 
-    function whitelistMint(uint256 _mintAmount, bytes32[] calldata _merkleProof)
+    function whitelistMint(
+        uint256 _mintAmount,
+        bytes32[] calldata _merkleProof
+    )
         public
         payable
         virtual
@@ -165,7 +195,9 @@ contract MinteebleERC721A is MinteeblePartialERC721, ERC721A, ReentrancyGuard {
     /**
      *  @notice Mints one or more items
      */
-    function mint(uint256 _mintAmount)
+    function mint(
+        uint256 _mintAmount
+    )
         public
         payable
         virtual
@@ -177,12 +209,10 @@ contract MinteebleERC721A is MinteeblePartialERC721, ERC721A, ReentrancyGuard {
         totalMintedByAddress[_msgSender()] += _mintAmount;
     }
 
-    function mintForAddress(address receiver, uint256 _mintAmount)
-        public
-        payable
-        enoughFunds(_mintAmount)
-        active
-    {
+    function mintForAddress(
+        address receiver,
+        uint256 _mintAmount
+    ) public payable enoughFunds(_mintAmount) active {
         require(
             _mintAmount <= maxMintAmountPerTrx,
             "Exceeded maximum total amount per trx!"
@@ -203,20 +233,17 @@ contract MinteebleERC721A is MinteeblePartialERC721, ERC721A, ReentrancyGuard {
     /**
      * @notice Mints item for another address. (Reserved to contract owner)
      */
-    function ownerMintForAddress(uint256 _mintAmount, address _receiver)
-        public 
-        virtual
-        onlyOwner
-    {
+    function ownerMintForAddress(
+        uint256 _mintAmount,
+        address _receiver
+    ) public virtual onlyOwner {
         require(totalSupply() + _mintAmount <= maxSupply, "Max supply exceed!");
         _safeMint(_receiver, _mintAmount);
     }
 
-    function walletOfOwner(address _owner)
-        public
-        view
-        returns (uint256[] memory)
-    {
+    function walletOfOwner(
+        address _owner
+    ) public view returns (uint256[] memory) {
         uint256 ownerTokenCount = balanceOf(_owner);
         uint256[] memory ownedTokenIds = new uint256[](ownerTokenCount);
         uint256 currentTokenId = _startTokenId();
@@ -242,5 +269,13 @@ contract MinteebleERC721A is MinteeblePartialERC721, ERC721A, ReentrancyGuard {
         }
 
         return ownedTokenIds;
+    }
+
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override returns (bool) {
+        return
+            interfaceId == type(IMinteebleERC721A).interfaceId ||
+            super.supportsInterface(interfaceId);
     }
 }

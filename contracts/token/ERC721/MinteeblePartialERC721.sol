@@ -16,6 +16,26 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
+interface IMinteeblePartialERC721 {
+    function setBaseUri(string memory _baseUri) external;
+
+    function setUriSuffix(string memory _uriSuffix) external;
+
+    function setRevealed(bool _revealed) external;
+
+    function setPaused(bool _paused) external;
+
+    function setPreRevealUri(string memory _preRevealUri) external;
+
+    function setMintPrice(uint256 _mintPrice) external;
+
+    function setMaxMintAmountPerTrx(uint256 _maxAmount) external;
+
+    function setMaxMintAmountPerAddress(uint256 _maxAmount) external;
+
+    function withdrawBalance() external;
+}
+
 abstract contract MinteeblePartialERC721 is Ownable {
     uint256 public maxSupply;
     uint256 public mintPrice;
