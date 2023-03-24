@@ -16,15 +16,41 @@ import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
+interface IMinteebleERC1155 is IERC1155 {
+    function addId(uint256 _id) external;
+
+    function removeId(uint256 _id) external;
+
+    function getIds() external view returns (uint256[] memory);
+
+    function setURI(string memory _newUri) external;
+
+    function mintForAddress(
+        address _recipientAccount,
+        uint256 _id,
+        uint256 _amount
+    ) external;
+
+    function airdrop(uint256 _id, address[] memory _accounts) external;
+}
+
 contract MinteebleERC1155 is
     ERC1155Supply,
     AccessControlEnumerable,
     ReentrancyGuard
 {
-    uint256[] public ids;
+    bool paused;
     bool public dynamicIdsEnabled;
     string public name;
     string public symbol;
+
+    struct IdInfo {
+        uint256 id;
+        uint256 price;
+        uint256 maxSupply;
+    }
+
+    IdInfo[] public idsInfo;
 
     constructor(
         string memory _name,
@@ -35,6 +61,7 @@ contract MinteebleERC1155 is
         dynamicIdsEnabled = true;
         name = _name;
         symbol = _symbol;
+        paused = true;
     }
 
     modifier requireAdmin(address _account) {
@@ -44,14 +71,24 @@ contract MinteebleERC1155 is
 
     modifier idExists(uint256 _id) {
         bool idFound = false;
-        for (uint256 i = 0; i < ids.length; i++) {
-            if (ids[i] == _id) idFound = true;
+        for (uint256 i = 0; i < idsInfo.length; i++) {
+            if (idsInfo[i].id == _id) idFound = true;
         }
         require(idFound, "Id not found");
         _;
     }
 
-    function supportsInterface(bytes4 interfaceId)
+    function _getIdIndex(uint256 _id) internal view returns (uint256 index) {
+        for (uint256 i = 0; i < idsInfo.length; ++i) {
+            if (idsInfo[i].id == _id) return i;
+        }
+
+        require(false, "Id not found");
+    }
+
+    function supportsInterface(
+        bytes4 interfaceId
+    )
         public
         view
         virtual
@@ -62,23 +99,24 @@ contract MinteebleERC1155 is
     }
 
     function _addId(uint256 _id) internal {
-        for (uint256 i = 0; i < ids.length; i++) {
-            require(ids[i] != _id, "Id already exists");
+        for (uint256 i = 0; i < idsInfo.length; i++) {
+            require(idsInfo[i].id != _id, "Id already exists");
         }
 
-        ids.push(_id);
+        IdInfo memory newId = IdInfo(_id, 0, 0);
+        idsInfo.push(newId);
     }
 
     function _removeId(uint256 _id) internal {
         bool idFound = false;
 
-        for (uint256 i = 0; i < ids.length; i++) {
-            if (ids[i] == _id) {
+        for (uint256 i = 0; i < idsInfo.length; i++) {
+            if (idsInfo[i].id == _id) {
                 require(totalSupply(_id) == 0, "Cannot delete id with supply");
 
-                ids[i] = ids[ids.length - 1];
-                delete ids[ids.length - 1];
-                ids.pop();
+                idsInfo[i] = idsInfo[idsInfo.length - 1];
+                delete idsInfo[idsInfo.length - 1];
+                idsInfo.pop();
 
                 idFound = true;
             }
@@ -95,8 +133,8 @@ contract MinteebleERC1155 is
         _removeId(_id);
     }
 
-    function getIds() public view returns (uint256[] memory) {
-        return ids;
+    function getIds() public view returns (IdInfo[] memory) {
+        return idsInfo;
     }
 
     function setURI(string memory _newUri) public requireAdmin(msg.sender) {
@@ -111,14 +149,56 @@ contract MinteebleERC1155 is
         _mint(_recipientAccount, _id, _amount, "");
     }
 
-    function airdrop(uint256 _id, address[] memory _accounts)
-        public
-        requireAdmin(msg.sender)
-        idExists(_id)
-        nonReentrant
-    {
+    function airdrop(
+        uint256 _id,
+        address[] memory _accounts
+    ) public requireAdmin(msg.sender) idExists(_id) nonReentrant {
         for (uint256 i; i < _accounts.length; i++) {
             _mint(_accounts[i], _id, 1, "");
+        }
+    }
+
+    function setMintPrice(
+        uint256 _id,
+        uint256 _price
+    ) public requireAdmin(msg.sender) {
+        idsInfo[_getIdIndex(_id)].price = _price;
+    }
+
+    function setMaxSupply(
+        uint256 _id,
+        uint256 _maxSupply
+    ) public requireAdmin(msg.sender) {
+        require(
+            _maxSupply > totalSupply(_id),
+            "Max supply can not be less than total supply."
+        );
+
+        idsInfo[_getIdIndex(_id)].maxSupply = _maxSupply;
+    }
+
+    function mintPrice(uint256 _id) public view returns (uint256) {
+        return idsInfo[_getIdIndex(_id)].price;
+    }
+
+    function maxSupply(uint256 _id) public view returns (uint256) {
+        return idsInfo[_getIdIndex(_id)].maxSupply;
+    }
+
+    function mint(
+        uint256 _id,
+        uint256 _amount
+    ) public payable idExists(_id) nonReentrant {
+        for (uint256 i = 0; i < idsInfo.length; i++) {
+            if (idsInfo[i].id == _id) {
+                if (idsInfo[i].maxSupply != 0) {
+                    require(
+                        totalSupply(_id) + _amount <= idsInfo[i].maxSupply,
+                        "Max supply reached"
+                    );
+                }
+                _mint(msg.sender, _id, _amount, "");
+            }
         }
     }
 }

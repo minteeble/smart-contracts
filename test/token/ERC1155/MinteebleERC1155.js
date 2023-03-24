@@ -26,7 +26,7 @@ describe("MinteebleERC1155", function () {
   let accounts = [];
   let erc1155;
 
-  let deployToken = async () => {};
+  let deployToken = async () => { };
 
   before(async () => {
     refInterface = new ethers.utils.Interface(refContractInfo.abi);
@@ -71,8 +71,8 @@ describe("MinteebleERC1155", function () {
     let ids = await token.getIds();
 
     expect(ids.length).to.equal(2);
-    expect(ids[0]).to.equal(5);
-    expect(ids[1]).to.equal(9);
+    expect(ids[0].id).to.equal(5);
+    expect(ids[1].id).to.equal(9);
   });
 
   it("Removing new ids from admin account", async function () {
@@ -85,7 +85,7 @@ describe("MinteebleERC1155", function () {
     let ids = await token.getIds();
 
     expect(ids.length).to.equal(1);
-    expect(ids[0]).to.equal(9);
+    expect(ids[0].id).to.equal(9);
   });
 
   it("Try removing new ids from non-admin account", async function () {
@@ -197,5 +197,37 @@ describe("MinteebleERC1155", function () {
     await expectThrowsAsync(() =>
       token.connect(accounts[1]).setURI("https://example2.com/{id}.json")
     );
+  });
+
+  it("Should do the normal mint", async () => {
+    let token = await deployToken();
+
+    await token.addId(8);
+    let price = await token.mintPrice(8);
+    await token.mint(8, 1, { value: price, from: accounts[0].address });
+  });
+
+  it("Should throw exception when user tries to mint over the supply", async () => {
+    let token = await deployToken();
+
+    let amount = 10;
+
+    await token.addId(8);
+    await token.setMintPrice(8, "1000000000000000");
+    await token.setMaxSupply(8, amount);
+    let price = await token.mintPrice(8);
+
+
+    await expectThrowsAsync(() => token.mint(8, amount + 1, { value: BigNumber.from(price).mul(amount + 1), from: accounts[0].address }))
+    await token.mint(8, amount, { value: BigNumber.from(price).mul(amount), from: accounts[0].address })
+
+  });
+
+  it("Should throw exception when user tries to mint a non existant id", async () => {
+    let token = await deployToken();
+
+    await token.addId(8);
+    let price = await token.mintPrice(8);
+    await expectThrowsAsync(() => token.mint(7, 1, { value: price, from: accounts[0].address }));
   });
 });
