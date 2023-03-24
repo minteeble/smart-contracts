@@ -32,6 +32,20 @@ interface IMinteebleERC1155 is IERC1155 {
     ) external;
 
     function airdrop(uint256 _id, address[] memory _accounts) external;
+
+    function setMintPrice(uint256 _id, uint256 _price) external;
+
+    function setMaxSupply(uint256 _id, uint256 _maxSupply) external;
+
+    function mintPrice(uint256 _id) external view returns (uint256);
+
+    function maxSupply(uint256 _id) external view returns (uint256);
+
+    function mint(uint256 _id, uint256 _amount) external payable;
+
+    function setPaused(bool _paused) external;
+
+    function withdrawBalance() external;
 }
 
 contract MinteebleERC1155 is
@@ -43,6 +57,9 @@ contract MinteebleERC1155 is
     bool public dynamicIdsEnabled;
     string public name;
     string public symbol;
+
+    bytes4 public constant IMINTEEBLE_ERC1155_INTERFACE_ID =
+        type(IMinteebleERC1155).interfaceId;
 
     struct IdInfo {
         uint256 id;
@@ -78,24 +95,17 @@ contract MinteebleERC1155 is
         _;
     }
 
+    modifier active() {
+        require(!paused, "Contract is paused.");
+        _;
+    }
+
     function _getIdIndex(uint256 _id) internal view returns (uint256 index) {
         for (uint256 i = 0; i < idsInfo.length; ++i) {
             if (idsInfo[i].id == _id) return i;
         }
 
         require(false, "Id not found");
-    }
-
-    function supportsInterface(
-        bytes4 interfaceId
-    )
-        public
-        view
-        virtual
-        override(ERC1155, AccessControlEnumerable)
-        returns (bool)
-    {
-        return super.supportsInterface(interfaceId);
     }
 
     function _addId(uint256 _id) internal {
@@ -188,7 +198,7 @@ contract MinteebleERC1155 is
     function mint(
         uint256 _id,
         uint256 _amount
-    ) public payable idExists(_id) nonReentrant {
+    ) public payable idExists(_id) active nonReentrant {
         for (uint256 i = 0; i < idsInfo.length; i++) {
             if (idsInfo[i].id == _id) {
                 if (idsInfo[i].maxSupply != 0) {
@@ -200,5 +210,30 @@ contract MinteebleERC1155 is
                 _mint(msg.sender, _id, _amount, "");
             }
         }
+    }
+
+    function setPaused(bool _paused) public requireAdmin(msg.sender) {
+        paused = _paused;
+    }
+
+    function withdrawBalance() public virtual requireAdmin(msg.sender) {
+        (bool success, ) = payable(msg.sender).call{
+            value: address(this).balance
+        }("");
+        require(success);
+    }
+
+    function supportsInterface(
+        bytes4 interfaceId
+    )
+        public
+        view
+        virtual
+        override(ERC1155, AccessControlEnumerable)
+        returns (bool)
+    {
+        return
+            interfaceId == type(IMinteebleERC1155).interfaceId ||
+            super.supportsInterface(interfaceId);
     }
 }

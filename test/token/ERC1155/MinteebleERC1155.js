@@ -34,11 +34,15 @@ describe("MinteebleERC1155", function () {
     erc1155 = await ethers.getContractFactory("MinteebleERC1155");
     accounts = await ethers.getSigners();
     deployToken = async () => {
-      return await erc1155.deploy(
+      let token = await erc1155.deploy(
         "TokenName",
         "TokenSymbol",
         "https://example.com/{id}.json"
       );
+
+      await token.setPaused(false);
+
+      return token;
     };
   });
 
@@ -229,5 +233,57 @@ describe("MinteebleERC1155", function () {
     await token.addId(8);
     let price = await token.mintPrice(8);
     await expectThrowsAsync(() => token.mint(7, 1, { value: price, from: accounts[0].address }));
+  });
+
+  it("Should return information about the existing IDs", async () => {
+    let token = await deployToken();
+
+    await token.addId(5);
+    await token.setMintPrice(5, "1000000000000000");
+    await token.setMaxSupply(5, 10000);
+    await token.addId(8);
+    await token.setMintPrice(8, "100000000000000");
+    await token.setMaxSupply(8, 3000);
+    await token.addId(9);
+    await token.setMintPrice(9, "100000000000000");
+    await token.setMaxSupply(9, 100);
+
+    let ids = await token.getIds();
+
+    expect(ids[0].id).to.equal(5);
+    expect(ids[0].maxSupply).to.equal(10000);
+    expect(ids[0].price).to.equal("1000000000000000");
+
+    expect(ids[1].id).to.equal(8);
+    expect(ids[1].maxSupply).to.equal(3000);
+    expect(ids[1].price).to.equal("100000000000000");
+
+    expect(ids[2].id).to.equal(9);
+    expect(ids[2].maxSupply).to.equal(100);
+    expect(ids[2].price).to.equal("100000000000000");
+
+  });
+
+  it("Should throw exception when a common account tries to withdraw balance", async () => {
+    let token = await deployToken();
+
+    await token.addId(8);
+    await token.setMintPrice(8, "1000000000000000")
+    let price = await token.mintPrice(8);
+    await token.mint(8, 1, { value: price, from: accounts[0].address });
+
+    await expectThrowsAsync(() => token.connect(accounts[1]).withdrawBalance());
+
+  });
+
+  it("Should withdraw balance", async () => {
+    let token = await deployToken();
+
+    await token.addId(8);
+    await token.setMintPrice(8, "1000000000000000")
+    let price = await token.mintPrice(8);
+    await token.mint(8, 1, { value: price, from: accounts[0].address });
+
+    await token.connect(accounts[0]).withdrawBalance();
   });
 });
