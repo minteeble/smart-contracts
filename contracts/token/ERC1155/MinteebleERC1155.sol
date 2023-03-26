@@ -61,6 +61,8 @@ contract MinteebleERC1155 is
     bytes4 public constant IMINTEEBLE_ERC1155_INTERFACE_ID =
         type(IMinteebleERC1155).interfaceId;
 
+    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+
     struct IdInfo {
         uint256 id;
         uint256 price;
@@ -155,7 +157,8 @@ contract MinteebleERC1155 is
         address _recipientAccount,
         uint256 _id,
         uint256 _amount
-    ) public requireAdmin(msg.sender) idExists(_id) nonReentrant {
+    ) public idExists(_id) nonReentrant {
+        require(hasRole(MINTER_ROLE, msg.sender), "Minter role required.");
         _mint(_recipientAccount, _id, _amount, "");
     }
 
