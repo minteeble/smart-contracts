@@ -219,7 +219,12 @@ contract MinteebleERC1155 is
         paused = _paused;
     }
 
-    function withdrawBalance() public virtual requireAdmin(msg.sender) {
+    function withdrawBalance()
+        public
+        virtual
+        requireAdmin(msg.sender)
+        nonReentrant
+    {
         (bool success, ) = payable(msg.sender).call{
             value: address(this).balance
         }("");
