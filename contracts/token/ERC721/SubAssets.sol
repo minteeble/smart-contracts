@@ -69,6 +69,6 @@ contract DynamicCollection is MinteebleERC721 {
         paired = true;
         subAssetsCollection.setPaired(true);
 
-        address assetOwner = subAssetsCollection.ownerOf(id);
+        // address assetOwner = subAssetsCollection.ownerOf(id);
     }
 }
