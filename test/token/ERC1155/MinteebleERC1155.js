@@ -41,6 +41,7 @@ describe("MinteebleERC1155", function () {
       );
 
       await token.setPaused(false);
+      await token.grantRole(await token.MINTER_ROLE(), accounts[0].address);
 
       return token;
     };
@@ -124,7 +125,7 @@ describe("MinteebleERC1155", function () {
     let token = await deployToken();
 
     await token.addId(10);
-    await token.mintForAddress(accounts[1].address, 10, 4);
+    await token.connect(accounts[0]).mintForAddress(accounts[1].address, 10, 4);
     await expectThrowsAsync(() => token.removeId(10));
   });
 
