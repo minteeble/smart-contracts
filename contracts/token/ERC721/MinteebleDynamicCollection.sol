@@ -83,4 +83,12 @@ contract MinteebleDynamicCollection is MinteebleERC721A {
 
         itemInfo[_id].gadgets.push(gadgetTokenId);
     }
+
+    function pairGadget(
+        uint256 _id,
+        uint256 _gadgetGroupId,
+        uint256 _variationId
+    ) public onlyOwner {
+        _pairGadget(msg.sender, _id, _gadgetGroupId, _variationId);
+    }
 }
