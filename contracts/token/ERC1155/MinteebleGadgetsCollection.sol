@@ -15,9 +15,9 @@ pragma solidity ^0.8.14;
 import "./MinteebleERC1155.sol";
 
 interface IMinteebleGadgetsCollection is IMinteebleERC1155 {
-    function getGadgetGroups() external returns (uint256);
+    function getGadgetGroups() external view returns (uint256);
 
-    function getVariationsPerGroup() external returns (uint256);
+    function getVariationsPerGroup() external view returns (uint256);
 
     function tokenIdToGroupId(
         uint256 _id
@@ -26,6 +26,10 @@ interface IMinteebleGadgetsCollection is IMinteebleERC1155 {
     function groupIdToTokenId(
         uint256 _groupId,
         uint256 _variationId
+    ) external view returns (uint256);
+
+    function getGadgetGroupVariations(
+        uint256 _groupId
     ) external view returns (uint256);
 }
 
@@ -44,8 +48,20 @@ contract MinteebleGadgetsCollection is MinteebleERC1155 {
         variationsPerGroup = 32;
     }
 
+    function getGadgetGroups() public view returns (uint256) {
+        return gadgetGroups;
+    }
+
+    function getVariationsPerGroup() public view returns (uint256) {
+        return variationsPerGroup;
+    }
+
     function _addGadgetGroup() internal {
         gadgetGroups++;
+    }
+
+    function addGagdetGroup() public requireAdmin(msg.sender) {
+        _addGadgetGroup();
     }
 
     function tokenIdToGroupId(
@@ -71,5 +87,17 @@ contract MinteebleGadgetsCollection is MinteebleERC1155 {
 
         _addId(_groupId * variationsPerGroup + gadgetVariations[_groupId]);
         gadgetVariations[_groupId]++;
+    }
+
+    function addVariation(uint256 _groupId) public requireAdmin(msg.sender) {
+        _addVariation(_groupId);
+    }
+
+    function getGadgetGroupVariations(
+        uint256 _groupId
+    ) public view returns (uint256) {
+        require(_groupId >= 0 && _groupId < gadgetGroups, "Invalid group ID");
+
+        return gadgetVariations[_groupId];
     }
 }
