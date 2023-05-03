@@ -13,6 +13,8 @@ pragma solidity ^0.8.14;
 //  =============================================
 
 import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
+import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
+
 import "./MinteebleERC721A.sol";
 import "../ERC1155/MinteebleGadgetsCollection.sol";
 
@@ -24,7 +26,7 @@ interface IMinteebleDynamicCollection is IMinteebleERC721A {
     function getItemInfo(uint256 _id) external view returns (ItemInfo memory);
 }
 
-contract MinteebleDynamicCollection is MinteebleERC721A {
+contract MinteebleDynamicCollection is MinteebleERC721A, IERC1155Receiver {
     IMinteebleGadgetsCollection public gadgetCollection;
 
     struct ItemInfo {
@@ -39,6 +41,12 @@ contract MinteebleDynamicCollection is MinteebleERC721A {
         uint256 _maxSupply,
         uint256 _mintPrice
     ) MinteebleERC721A(_tokenName, _tokenSymbol, _maxSupply, _mintPrice) {}
+
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(MinteebleERC721A, IERC165) returns (bool) {
+        return super.supportsInterface(interfaceId);
+    }
 
     function setGadgetCollection(address _gadgetCollection) public onlyOwner {
         gadgetCollection = IMinteebleGadgetsCollection(_gadgetCollection);
@@ -71,6 +79,21 @@ contract MinteebleDynamicCollection is MinteebleERC721A {
                 itemInfo[_id].gadgets[i] != gadgetTokenId,
                 "Gadget already paired"
             );
+
+            uint256 currentGadgetGroup;
+            (currentGadgetGroup, ) = gadgetCollection.tokenIdToGroupId(
+                itemInfo[_id].gadgets[i]
+            );
+
+            if (currentGadgetGroup == _gadgetGroupId) {
+                gadgetCollection.safeTransferFrom(
+                    address(this),
+                    _account,
+                    itemInfo[_id].gadgets[i],
+                    1,
+                    ""
+                );
+            }
         }
 
         gadgetCollection.safeTransferFrom(
@@ -90,5 +113,25 @@ contract MinteebleDynamicCollection is MinteebleERC721A {
         uint256 _variationId
     ) public onlyOwner {
         _pairGadget(msg.sender, _id, _gadgetGroupId, _variationId);
+    }
+
+    function onERC1155Received(
+        address,
+        address,
+        uint256,
+        uint256,
+        bytes memory
+    ) public virtual returns (bytes4) {
+        return this.onERC1155Received.selector;
+    }
+
+    function onERC1155BatchReceived(
+        address,
+        address,
+        uint256[] memory,
+        uint256[] memory,
+        bytes memory
+    ) public virtual returns (bytes4) {
+        return this.onERC1155BatchReceived.selector;
     }
 }

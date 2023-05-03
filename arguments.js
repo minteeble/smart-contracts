@@ -1,5 +1,6 @@
 module.exports = [
-  "Test",
-  "T",
-  "test"
+  "TestSepolia",
+  "TS",
+  "10000",
+  "2000000000000"
 ];

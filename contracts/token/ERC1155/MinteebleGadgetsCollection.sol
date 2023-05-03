@@ -60,7 +60,7 @@ contract MinteebleGadgetsCollection is MinteebleERC1155 {
         gadgetGroups++;
     }
 
-    function addGagdetGroup() public requireAdmin(msg.sender) {
+    function addGadgetGroup() public requireAdmin(msg.sender) {
         _addGadgetGroup();
     }
 

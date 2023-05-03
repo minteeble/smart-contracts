@@ -57,14 +57,14 @@ describe("MinteebleGadgetCollection", function () {
   });
 
   it("Should create two empty gadget groups", async () => {
-    await token.addGagdetGroup();
-    await token.addGagdetGroup();
+    await token.addGadgetGroup();
+    await token.addGadgetGroup();
 
     expect(await token.getGadgetGroups()).to.equal(2);
   });
 
   it("Should add variations", async () => {
-    await token.addGagdetGroup();
+    await token.addGadgetGroup();
 
     await token.addVariation(0);
 
@@ -77,9 +77,9 @@ describe("MinteebleGadgetCollection", function () {
   })
 
   it("Should throw exception if trying to add variations to a non-existent group", async () => {
-    await token.addGagdetGroup();
-    await token.addGagdetGroup();
-    await token.addGagdetGroup();
+    await token.addGadgetGroup();
+    await token.addGadgetGroup();
+    await token.addGadgetGroup();
 
     await expectThrowsAsync(() => token.addVariation(3));
     await expectThrowsAsync(() => token.addVariation(4));
