@@ -29,6 +29,9 @@ interface IMinteebleDynamicCollection is IMinteebleERC721A {
 contract MinteebleDynamicCollection is MinteebleERC721A, IERC1155Receiver {
     IMinteebleGadgetsCollection public gadgetCollection;
 
+    bytes4 public constant IMINTEEBLE_DYNAMIC_COLLECTION_INTERFACE_ID =
+        type(IMinteebleDynamicCollection).interfaceId;
+
     struct ItemInfo {
         uint256[] gadgets;
     }
@@ -41,12 +44,6 @@ contract MinteebleDynamicCollection is MinteebleERC721A, IERC1155Receiver {
         uint256 _maxSupply,
         uint256 _mintPrice
     ) MinteebleERC721A(_tokenName, _tokenSymbol, _maxSupply, _mintPrice) {}
-
-    function supportsInterface(
-        bytes4 interfaceId
-    ) public view virtual override(MinteebleERC721A, IERC165) returns (bool) {
-        return super.supportsInterface(interfaceId);
-    }
 
     function setGadgetCollection(address _gadgetCollection) public onlyOwner {
         gadgetCollection = IMinteebleGadgetsCollection(_gadgetCollection);
@@ -133,5 +130,13 @@ contract MinteebleDynamicCollection is MinteebleERC721A, IERC1155Receiver {
         bytes memory
     ) public virtual returns (bytes4) {
         return this.onERC1155BatchReceived.selector;
+    }
+
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(MinteebleERC721A, IERC165) returns (bool) {
+        return
+            interfaceId == type(IMinteebleDynamicCollection).interfaceId ||
+            super.supportsInterface(interfaceId);
     }
 }

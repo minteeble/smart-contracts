@@ -1,6 +1,4 @@
 module.exports = [
-  "TestSepolia",
-  "TS",
-  "10000",
-  "2000000000000"
-];
+  "TestDynamic",
+  "TD",
+  "1000", "1000000000000000"];
