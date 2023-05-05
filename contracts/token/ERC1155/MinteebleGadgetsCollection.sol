@@ -39,6 +39,9 @@ contract MinteebleGadgetsCollection is MinteebleERC1155 {
 
     mapping(uint256 => uint256) public gadgetVariations;
 
+    bytes4 public constant IMINTEEBLE_GADGETS_INTERFACE_ID =
+        type(IMinteebleGadgetsCollection).interfaceId;
+
     constructor(
         string memory _tokenName,
         string memory _tokenSymbol,
@@ -99,5 +102,13 @@ contract MinteebleGadgetsCollection is MinteebleERC1155 {
         require(_groupId >= 0 && _groupId < gadgetGroups, "Invalid group ID");
 
         return gadgetVariations[_groupId];
+    }
+
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override returns (bool) {
+        return
+            interfaceId == type(IMinteebleGadgetsCollection).interfaceId ||
+            super.supportsInterface(interfaceId);
     }
 }
