@@ -58,7 +58,7 @@ contract MinteebleDynamicCollection is MinteebleERC721A, IERC1155Receiver {
         uint256 _id,
         uint256 _gadgetGroupId,
         uint256 _variationId
-    ) public {
+    ) internal {
         require(ownerOf(_id) == _account, "Id not owned");
 
         uint256 gadgetTokenId = gadgetCollection.groupIdToTokenId(
