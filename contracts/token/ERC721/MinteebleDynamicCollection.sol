@@ -108,7 +108,7 @@ contract MinteebleDynamicCollection is MinteebleERC721A, IERC1155Receiver {
         uint256 _id,
         uint256 _gadgetGroupId,
         uint256 _variationId
-    ) public onlyOwner {
+    ) public {
         _pairGadget(msg.sender, _id, _gadgetGroupId, _variationId);
     }
 
