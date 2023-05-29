@@ -136,7 +136,6 @@ describe("MinteebleERC721A", function () {
 
     await expectThrowsAsync(() => collectionInstance.connect(accounts[1]).mint(6, { value: "1000000000000000" }));
     await collectionInstance.connect(accounts[1]).mint(5, { value: "5000000000000000" });
-
   })
 
   it("Should change max mint amount per trx", async () => {
@@ -159,7 +158,24 @@ describe("MinteebleERC721A", function () {
     await expectThrowsAsync(() => collectionInstance.coonnect(accounts[1]).setMaxMintAmountPerAddress(10));
   })
 
-  // it("Should ", async () => { })
+  it("Should withdraw balance", async () => {
+    await collectionInstance.setPaused(false);
+    await collectionInstance.connect(accounts[1]).mint(1, { value: "1000000000000000" });
+
+    expect(await ethers.provider.getBalance(collectionInstance.address)).to.equal("1000000000000000");
+    await collectionInstance.withdrawBalance();
+    expect(await ethers.provider.getBalance(collectionInstance.address)).to.equal("0");
+
+  })
+
+  it("Should throw error when trying to withdraw balance from non-owner account", async () => {
+    await collectionInstance.setPaused(false);
+    await collectionInstance.connect(accounts[1]).mint(1, { value: "1000000000000000" });
+
+    expect(await ethers.provider.getBalance(collectionInstance.address)).to.equal("1000000000000000");
+    await expectThrowsAsync(() => collectionInstance.connect(accounts[1]).withdrawBalance());
+    expect(await ethers.provider.getBalance(collectionInstance.address)).to.equal("1000000000000000");
+  })
 
 
 });
