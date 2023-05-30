@@ -20,13 +20,14 @@ abstract contract SimpleMultiWhitelistExtension is
     ISimpleMultiWhitelistExtension
 {
     struct WhitelistGroup {
+        bool created;
         bool enabled;
         bytes32 merkleRoot;
+        uint256 price;
         mapping(address => bool) used;
     }
 
     mapping(uint256 => WhitelistGroup) public whitelistGroups;
-    uint256[] public activeWhitelistGroups;
 
     modifier canWhitelistMint(
         uint256 _groupId,
@@ -42,6 +43,11 @@ abstract contract SimpleMultiWhitelistExtension is
             "Exceeded maximum total amount per address!"
         );
 
+        require(
+            msg.value >= whitelistGroups[_groupId].price,
+            "Insufficient funds!"
+        );
+
         bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
         require(
             MerkleProof.verify(
@@ -54,71 +60,73 @@ abstract contract SimpleMultiWhitelistExtension is
         _;
     }
 
-    function _createWhitelistGroup(uint256 _groupId, bytes32 _merkleRoot)
-        internal
+    modifier isWhitelistGroupValid(uint256 _groupId) {
+        require(whitelistGroups[_groupId].created, "Invalid group");
+        _;
+    }
+
+    function whitelistGroupExists(uint256 _groupId) public view returns (bool) {
+        return whitelistGroups[_groupId].created;
+    }
+
+    function getWhitelistPrice(uint256 _groupId) public view returns (uint256) {
+        return whitelistGroups[_groupId].price;
+    }
+
+    function getWhitelistMerkleRoot(uint256 _groupId)
+        public
+        view
+        returns (bytes32)
     {
-        require(
-            !whitelistGroups[_groupId].enabled,
-            "Group with the same ID already exists!"
-        );
-
-        whitelistGroups[_groupId].enabled = true;
-        whitelistGroups[_groupId].merkleRoot = _merkleRoot;
-
-        activeWhitelistGroups.push(_groupId);
+        return whitelistGroups[_groupId].merkleRoot;
     }
 
-    function switchWhitelistGroup(uint256 _groupId) internal {
-        require(
-            whitelistGroups[_groupId].enabled,
-            "Group with the given ID does not exist or is not enabled!"
-        );
-
-        // Rimuovi il gruppo dalla lista dei gruppi attivi se già presente
-        for (uint256 i = 0; i < activeWhitelistGroups.length; i++) {
-            if (activeWhitelistGroups[i] == _groupId) {
-                activeWhitelistGroups[i] = activeWhitelistGroups[
-                    activeWhitelistGroups.length - 1
-                ];
-                activeWhitelistGroups.pop();
-                break;
-            }
-        }
-
-        activeWhitelistGroups.push(_groupId);
+    function isWhitelistUsed(uint256 _groupId, address _account)
+        public
+        view
+        returns (bool)
+    {
+        return whitelistGroups[_groupId].used[_account];
     }
 
-    function disableWhitelistGroup(uint256 _groupId) internal {
-        require(
-            whitelistGroups[_groupId].enabled,
-            "Group with the given ID does not exist or is not enabled!"
-        );
+    function _createWhitelistGroup(
+        uint256 _groupId,
+        bytes32 _merkleRoot,
+        uint256 _price
+    ) internal {
+        require(!whitelistGroups[_groupId].created, "Group already exists");
 
         whitelistGroups[_groupId].enabled = false;
-
-        // Rimuovi il gruppo dalla lista dei gruppi attivi se presente
-        for (uint256 i = 0; i < activeWhitelistGroups.length; i++) {
-            if (activeWhitelistGroups[i] == _groupId) {
-                activeWhitelistGroups[i] = activeWhitelistGroups[
-                    activeWhitelistGroups.length - 1
-                ];
-                activeWhitelistGroups.pop();
-                break;
-            }
-        }
+        whitelistGroups[_groupId].created = true;
+        whitelistGroups[_groupId].merkleRoot = _merkleRoot;
+        whitelistGroups[_groupId].price = _price;
     }
 
-    function _setWhitelistMintEnabled(bool _state) internal {
-        for (uint256 i = 0; i < activeWhitelistGroups.length; i++) {
-            whitelistGroups[activeWhitelistGroups[i]].enabled = _state;
-        }
+    function _setWhitelistGroupEnabled(uint256 _groupId, bool _enabled)
+        internal
+        isWhitelistGroupValid(_groupId)
+    {
+        whitelistGroups[_groupId].enabled = _enabled;
     }
 
-    function _setMerkleRoot(uint256 _groupId, bytes32 _merkleRoot) internal {
+    function _setWhitelistMerkleRoot(uint256 _groupId, bytes32 _merkleRoot)
+        internal
+        isWhitelistGroupValid(_groupId)
+    {
         whitelistGroups[_groupId].merkleRoot = _merkleRoot;
     }
 
-    function _consumeWhitelist(uint256 _groupId, address _account) internal {
+    function _setWhitelistPrice(uint256 _groupId, uint256 _price)
+        internal
+        isWhitelistGroupValid(_groupId)
+    {
+        whitelistGroups[_groupId].price = _price;
+    }
+
+    function _consumeWhitelist(uint256 _groupId, address _account)
+        internal
+        isWhitelistGroupValid(_groupId)
+    {
         whitelistGroups[_groupId].used[_account] = true;
     }
 }

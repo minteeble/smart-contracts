@@ -12,11 +12,11 @@ pragma solidity ^0.8.14;
 //
 //  =============================================
 
-import "../MinteebleERC721A.sol";
+import "../MinteebleDynamicCollection.sol";
 import "../extensions/SimpleMultiWhitelistExtension.sol";
 
-contract MinteebleERC721A_SimpleMultiWhitelist is
-    MinteebleERC721A,
+contract MinteebleDynamicCollection_SimpleMultiWhitelist is
+    MinteebleDynamicCollection,
     SimpleMultiWhitelistExtension
 {
     constructor(
@@ -24,7 +24,14 @@ contract MinteebleERC721A_SimpleMultiWhitelist is
         string memory _tokenSymbol,
         uint256 _maxSupply,
         uint256 _mintPrice
-    ) MinteebleERC721A(_tokenName, _tokenSymbol, _maxSupply, _mintPrice) {}
+    )
+        MinteebleDynamicCollection(
+            _tokenName,
+            _tokenSymbol,
+            _maxSupply,
+            _mintPrice
+        )
+    {}
 
     function whitelistMint(uint256 _groupId, bytes32[] calldata _merkleProof)
         public
