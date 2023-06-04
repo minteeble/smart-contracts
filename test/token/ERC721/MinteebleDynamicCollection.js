@@ -107,6 +107,67 @@ describe("MinteebleDynamicCollection", function () {
     expect(itemInfo.gadgets[0]).to.equal(0);
   });
 
+  it("Should pair/unpair single gadget with variation(s)", async () => {
+    await gadgetsCollectionInstance.addGadgetGroup();
+    await gadgetsCollectionInstance.addVariation(0);
+    await gadgetsCollectionInstance.addVariation(0);
+    await gadgetsCollectionInstance.addVariation(0);
+
+    await gadgetsCollectionInstance.mint(0, 1, { value: 0 });
+    await gadgetsCollectionInstance.mint(1, 1, { value: 0 });
+    await gadgetsCollectionInstance.mint(2, 1, { value: 0 });
+    await dynamicCollectionInstance.mint(1, { value: "1000000000000000" });
+
+    await gadgetsCollectionInstance.setApprovalForAll(dynamicCollectionInstance.address, true)
+    await dynamicCollectionInstance.pairGadget(1, 0, 0);
+    // await dynamicCollectionInstance.pairGadget(1, 0, 2);
+
+    console.log("AAAA");
+
+    expect(await gadgetsCollectionInstance.balanceOf(accounts[0].address, 0)).to.equal(0);
+    expect(await gadgetsCollectionInstance.balanceOf(dynamicCollectionInstance.address, 0)).to.equal(1);
+    expect(await dynamicCollectionInstance.ownerOf(1)).to.equal(accounts[0].address)
+    let itemInfo = await dynamicCollectionInstance.getItemInfo(1);
+    expect(itemInfo.gadgets.length).to.equal(1);
+    expect(itemInfo.gadgets[0]).to.equal(0);
+
+    await expectThrowsAsync(() => dynamicCollectionInstance.unpairGadget(2, 0, 0));
+    await dynamicCollectionInstance.unpairGadget(1, 0, 0);
+    await expectThrowsAsync(() => dynamicCollectionInstance.unpairGadget(1, 0, 0));
+    await expectThrowsAsync(() => dynamicCollectionInstance.unpairGadget(2, 0, 0));
+
+
+    expect(await gadgetsCollectionInstance.balanceOf(dynamicCollectionInstance.address, 0)).to.equal(0);
+    expect(await gadgetsCollectionInstance.balanceOf(accounts[0].address, 0)).to.equal(1);
+    expect(await dynamicCollectionInstance.ownerOf(1)).to.equal(accounts[0].address);
+    itemInfo = await dynamicCollectionInstance.getItemInfo(1);
+    expect(itemInfo.gadgets.length).to.equal(0);
+
+    // expect(itemInfo.gadgets[0]).to.equal(0);
+
+    await dynamicCollectionInstance.pairGadget(1, 0, 1);
+    // await dynamicCollectionInstance.pairGadget(1, 0, 2);
+
+  });
+
+  // it("Should pair single gadget with double variation - 2", async () => {
+  //   await gadgetsCollectionInstance.addGadgetGroup();
+  //   await gadgetsCollectionInstance.addVariation(0);
+  //   await gadgetsCollectionInstance.addVariation(0);
+
+  //   await gadgetsCollectionInstance.mint(0, 2, { value: 0 });
+  //   await dynamicCollectionInstance.mint(1, { value: "1000000000000000" });
+
+  //   await gadgetsCollectionInstance.setApprovalForAll(dynamicCollectionInstance.address, true)
+  //   await dynamicCollectionInstance.pairGadget(1, 0, 0);
+
+  //   expect(await gadgetsCollectionInstance.balanceOf(dynamicCollectionInstance.address, 0)).to.equal(1);
+  //   expect(await dynamicCollectionInstance.ownerOf(1)).to.equal(accounts[0].address)
+  //   let itemInfo = await dynamicCollectionInstance.getItemInfo(1);
+  //   expect(itemInfo.gadgets.length).to.equal(1);
+  //   expect(itemInfo.gadgets[0]).to.equal(0);
+  // });
+
   it("Should throw exception if trying to pair the single gadget and variation", async () => {
     await gadgetsCollectionInstance.addGadgetGroup();
     await gadgetsCollectionInstance.addVariation(0);
@@ -134,10 +195,10 @@ describe("MinteebleDynamicCollection", function () {
     expect(await gadgetsCollectionInstance.balanceOf(dynamicCollectionInstance.address, 0)).to.equal(1);
     expect(await gadgetsCollectionInstance.balanceOf(dynamicCollectionInstance.address, 1)).to.equal(0);
 
-    await dynamicCollectionInstance.pairGadget(1, 0, 1);
+    // await dynamicCollectionInstance.pairGadget(1, 0, 1);
 
-    expect(await gadgetsCollectionInstance.balanceOf(dynamicCollectionInstance.address, 0)).to.equal(0);
-    expect(await gadgetsCollectionInstance.balanceOf(dynamicCollectionInstance.address, 1)).to.equal(1);
+    // expect(await gadgetsCollectionInstance.balanceOf(dynamicCollectionInstance.address, 0)).to.equal(0);
+    // expect(await gadgetsCollectionInstance.balanceOf(dynamicCollectionInstance.address, 1)).to.equal(1);
   })
 
 });

@@ -82,15 +82,17 @@ contract MinteebleDynamicCollection is MinteebleERC721A, IERC1155Receiver {
                 itemInfo[_id].gadgets[i]
             );
 
-            if (currentGadgetGroup == _gadgetGroupId) {
-                gadgetCollection.safeTransferFrom(
-                    address(this),
-                    _account,
-                    itemInfo[_id].gadgets[i],
-                    1,
-                    ""
-                );
-            }
+            require(_gadgetGroupId != currentGadgetGroup, "Group already used");
+
+            // if (currentGadgetGroup == _gadgetGroupId) {
+            //     gadgetCollection.safeTransferFrom(
+            //         address(this),
+            //         _account,
+            //         itemInfo[_id].gadgets[i],
+            //         1,
+            //         ""
+            //     );
+            // }
         }
 
         gadgetCollection.safeTransferFrom(
@@ -104,12 +106,58 @@ contract MinteebleDynamicCollection is MinteebleERC721A, IERC1155Receiver {
         itemInfo[_id].gadgets.push(gadgetTokenId);
     }
 
+    function _unpairGadget(
+        address _account,
+        uint256 _id,
+        uint256 _gadgetGroupId,
+        uint256 _variationId
+    ) internal {
+        require(ownerOf(_id) == _account, "Id not owned");
+
+        uint256 gadgetTokenId = gadgetCollection.groupIdToTokenId(
+            _gadgetGroupId,
+            _variationId
+        );
+
+        for (uint256 i = 0; i < itemInfo[_id].gadgets.length; i++) {
+            if (itemInfo[_id].gadgets[i] == gadgetTokenId) {
+                gadgetCollection.safeTransferFrom(
+                    address(this),
+                    _account,
+                    gadgetTokenId,
+                    1,
+                    ""
+                );
+
+                if (itemInfo[_id].gadgets.length > 1) {
+                    itemInfo[_id].gadgets[i] = itemInfo[_id].gadgets[
+                        itemInfo[_id].gadgets.length - 1
+                    ];
+                }
+
+                itemInfo[_id].gadgets.pop();
+
+                return;
+            }
+        }
+
+        require(0 == 1, "Invalid gadget");
+    }
+
     function pairGadget(
         uint256 _id,
         uint256 _gadgetGroupId,
         uint256 _variationId
     ) public {
         _pairGadget(msg.sender, _id, _gadgetGroupId, _variationId);
+    }
+
+    function unpairGadget(
+        uint256 _id,
+        uint256 _gadgetGroupId,
+        uint256 _variationId
+    ) public {
+        _unpairGadget(msg.sender, _id, _gadgetGroupId, _variationId);
     }
 
     function onERC1155Received(
@@ -132,9 +180,13 @@ contract MinteebleDynamicCollection is MinteebleERC721A, IERC1155Receiver {
         return this.onERC1155BatchReceived.selector;
     }
 
-    function supportsInterface(
-        bytes4 interfaceId
-    ) public view virtual override(MinteebleERC721A, IERC165) returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(MinteebleERC721A, IERC165)
+        returns (bool)
+    {
         return
             interfaceId == type(IMinteebleDynamicCollection).interfaceId ||
             super.supportsInterface(interfaceId);
