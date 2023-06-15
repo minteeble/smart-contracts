@@ -25,11 +25,17 @@ interface IMinteebleERC1155 is IERC1155 {
 
     function setURI(string memory _newUri) external;
 
-    function mintForAddress(
+    function ownerMintForAddress(
         address _recipientAccount,
         uint256 _id,
         uint256 _amount
     ) external;
+
+    function mintForAddress(
+        address _recipientAccount,
+        uint256 _id,
+        uint256 _amount
+    ) external payable;
 
     function airdrop(uint256 _id, address[] memory _accounts) external;
 
@@ -153,7 +159,7 @@ contract MinteebleERC1155 is
         _setURI(_newUri);
     }
 
-    function mintForAddress(
+    function ownerMintForAddress(
         address _recipientAccount,
         uint256 _id,
         uint256 _amount
@@ -162,26 +168,52 @@ contract MinteebleERC1155 is
         _mint(_recipientAccount, _id, _amount, "");
     }
 
-    function airdrop(
+    function mintForAddress(
+        address _recipientAccount,
         uint256 _id,
-        address[] memory _accounts
-    ) public requireAdmin(msg.sender) idExists(_id) nonReentrant {
+        uint256 _amount
+    ) public payable idExists(_id) active nonReentrant {
+        for (uint256 i = 0; i < idsInfo.length; i++) {
+            if (idsInfo[i].id == _id) {
+                if (idsInfo[i].maxSupply != 0) {
+                    require(
+                        totalSupply(_id) + _amount <= idsInfo[i].maxSupply,
+                        "Max supply reached"
+                    );
+                }
+
+                require(
+                    msg.value >= idsInfo[i].price * _amount,
+                    "Insufficient funds"
+                );
+
+                _mint(_recipientAccount, _id, _amount, "");
+            }
+        }
+    }
+
+    function airdrop(uint256 _id, address[] memory _accounts)
+        public
+        requireAdmin(msg.sender)
+        idExists(_id)
+        nonReentrant
+    {
         for (uint256 i; i < _accounts.length; i++) {
             _mint(_accounts[i], _id, 1, "");
         }
     }
 
-    function setMintPrice(
-        uint256 _id,
-        uint256 _price
-    ) public requireAdmin(msg.sender) {
+    function setMintPrice(uint256 _id, uint256 _price)
+        public
+        requireAdmin(msg.sender)
+    {
         idsInfo[_getIdIndex(_id)].price = _price;
     }
 
-    function setMaxSupply(
-        uint256 _id,
-        uint256 _maxSupply
-    ) public requireAdmin(msg.sender) {
+    function setMaxSupply(uint256 _id, uint256 _maxSupply)
+        public
+        requireAdmin(msg.sender)
+    {
         require(
             _maxSupply > totalSupply(_id),
             "Max supply can not be less than total supply."
@@ -198,21 +230,8 @@ contract MinteebleERC1155 is
         return idsInfo[_getIdIndex(_id)].maxSupply;
     }
 
-    function mint(
-        uint256 _id,
-        uint256 _amount
-    ) public payable idExists(_id) active nonReentrant {
-        for (uint256 i = 0; i < idsInfo.length; i++) {
-            if (idsInfo[i].id == _id) {
-                if (idsInfo[i].maxSupply != 0) {
-                    require(
-                        totalSupply(_id) + _amount <= idsInfo[i].maxSupply,
-                        "Max supply reached"
-                    );
-                }
-                _mint(msg.sender, _id, _amount, "");
-            }
-        }
+    function mint(uint256 _id, uint256 _amount) public payable {
+        mintForAddress(msg.sender, _id, _amount);
     }
 
     function setPaused(bool _paused) public requireAdmin(msg.sender) {
@@ -231,9 +250,7 @@ contract MinteebleERC1155 is
         require(success);
     }
 
-    function supportsInterface(
-        bytes4 interfaceId
-    )
+    function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
