@@ -310,7 +310,7 @@ describe("MinteebleERC1155", function () {
     expect(await token.balanceOf(accounts[4].address, 8)).to.equal(1);
   });
 
-  it("SHould throw exception whn trying to mint for another address withour providing enough funds", async () => {
+  it("Should throw exception whn trying to mint for another address withour providing enough funds", async () => {
     let token = await deployToken();
 
     await token.addId(8);
