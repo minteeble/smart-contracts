@@ -36,10 +36,42 @@ contract MinteebleERC1155_Whitelisted is MinteebleERC1155, WhitelistExtension {
                     );
                 }
 
-                require(msg.value < idsInfo[i].price, "Insufficient funds");
+                require(
+                    msg.value >= idsInfo[i].price * _amount,
+                    "Insufficient funds"
+                );
 
                 _mint(msg.sender, _id, _amount, "");
+                _consumeWhitelist(msg.sender, _amount);
             }
         }
+    }
+
+    function setWhitelistMintEnabled(bool _state)
+        public
+        requireAdmin(msg.sender)
+    {
+        _setWhitelistMintEnabled(_state);
+    }
+
+    function setMerkleRoot(bytes32 _merkleRoot)
+        public
+        requireAdmin(msg.sender)
+    {
+        _setMerkleRoot(_merkleRoot);
+    }
+
+    function setWhitelistMaxMintAmountPerTrx(uint256 _maxAmount)
+        public
+        requireAdmin(msg.sender)
+    {
+        _setWhitelistMaxMintAmountPerTrx(_maxAmount);
+    }
+
+    function setWhitelistMaxMintAmountPerAddress(uint256 _maxAmount)
+        public
+        requireAdmin(msg.sender)
+    {
+        _setWhitelistMaxMintAmountPerAddress(_maxAmount);
     }
 }
