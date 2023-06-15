@@ -210,6 +210,8 @@ describe("MinteebleERC1155", function () {
     await token.addId(8);
     let price = await token.mintPrice(8);
     await token.mint(8, 1, { value: price, from: accounts[0].address });
+    expect(await token.balanceOf(accounts[0].address, 8)).to.equal(1);
+
   });
 
   it("Should throw exception when user tries to mint over the supply", async () => {
@@ -287,4 +289,35 @@ describe("MinteebleERC1155", function () {
 
     await token.connect(accounts[0]).withdrawBalance();
   });
+
+  it("Should throw exception when trying to mint without enough funds", async () => {
+    let token = await deployToken();
+
+    await token.addId(8);
+    await token.setMintPrice(8, "1000000000000000000000")
+    await expectThrowsAsync(() => token.mint(8, 1, { value: "0", from: accounts[0].address }));
+  });
+
+  it("Should correctly mint for another address", async () => {
+    let token = await deployToken();
+
+    await token.addId(8);
+    await token.setMintPrice(8, "1000000000000000");
+
+    let price = await token.mintPrice(8);
+    await token.mintForAddress(accounts[4].address, 8, 1, { value: price, from: accounts[0].address });
+
+    expect(await token.balanceOf(accounts[4].address, 8)).to.equal(1);
+  });
+
+  it("SHould throw exception whn trying to mint for another address withour providing enough funds", async () => {
+    let token = await deployToken();
+
+    await token.addId(8);
+    await token.setMintPrice(8, "1000000000000000");
+
+    await expectThrowsAsync(() => token.mintForAddress(accounts[4].address, 8, 1, { value: "0", from: accounts[0].address }));
+
+    expect(await token.balanceOf(accounts[4].address, 8)).to.equal(0);
+  })
 });
