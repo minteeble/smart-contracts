@@ -43,8 +43,11 @@ contract MinteebleERC1155_Whitelisted is MinteebleERC1155, WhitelistExtension {
 
                 _mint(msg.sender, _id, _amount, "");
                 _consumeWhitelist(msg.sender, _amount);
+                return;
             }
         }
+
+        revert("Invalid id");
     }
 
     function setWhitelistMintEnabled(bool _state)
