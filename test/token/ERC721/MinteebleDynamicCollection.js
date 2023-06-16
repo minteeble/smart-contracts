@@ -122,8 +122,6 @@ describe("MinteebleDynamicCollection", function () {
     await dynamicCollectionInstance.pairGadget(1, 0, 0);
     // await dynamicCollectionInstance.pairGadget(1, 0, 2);
 
-    console.log("AAAA");
-
     expect(await gadgetsCollectionInstance.balanceOf(accounts[0].address, 0)).to.equal(0);
     expect(await gadgetsCollectionInstance.balanceOf(dynamicCollectionInstance.address, 0)).to.equal(1);
     expect(await dynamicCollectionInstance.ownerOf(1)).to.equal(accounts[0].address)

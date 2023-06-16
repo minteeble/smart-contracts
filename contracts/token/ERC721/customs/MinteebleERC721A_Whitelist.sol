@@ -13,7 +13,7 @@ pragma solidity ^0.8.14;
 //  =============================================
 
 import "../MinteebleERC721A.sol";
-import "../extensions/WhitelistExtension.sol";
+import "../../extensions/WhitelistExtension.sol";
 
 contract MinteebleERC721A_Whitelisted is MinteebleERC721A, WhitelistExtension {
     constructor(

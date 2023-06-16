@@ -179,8 +179,8 @@ describe("MinteebleERC721A_SimpleMultiWhitelist", function () {
 
 
 
-  it("Should throw expection when trying to enable a non existent whitelist", async () => {
+  // it("Should throw expection when trying to enable a non existent whitelist", async () => {
 
-  });
+  // });
 
 });
