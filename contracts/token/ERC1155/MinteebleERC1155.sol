@@ -60,7 +60,6 @@ contract MinteebleERC1155 is
     ReentrancyGuard
 {
     bool paused;
-    bool public dynamicIdsEnabled;
     string public name;
     string public symbol;
 
@@ -83,7 +82,6 @@ contract MinteebleERC1155 is
         string memory _uri
     ) ERC1155(_uri) {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        dynamicIdsEnabled = true;
         name = _name;
         symbol = _symbol;
         paused = true;
