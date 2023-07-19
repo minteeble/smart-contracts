@@ -110,10 +110,13 @@ describe.only("Test_MinteebleRandomizationConsumer", function () {
     await contractsDeployment();
 
     let res = await mrcInstance.getRandom();
+    // await VRFCoordinatorV2MockInstance.fulfillRandomWords("1", VRFV2WrapperInstance.address)
     await (await VRFCoordinatorV2MockInstance.fulfillRandomWords("1", VRFV2WrapperInstance.address)).wait();
 
-    let res2 = await (await mrcInstance.getRandom()).wait();
-    console.log("Res", res, res2);
+    // let res2 = await (await mrcInstance.getRandom()).wait();
+    // console.log("Res", res);
+    console.log("Res", await mrcInstance.s_requests(1));
+
   });
 
 
