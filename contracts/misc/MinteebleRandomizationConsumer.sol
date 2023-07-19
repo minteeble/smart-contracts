@@ -35,6 +35,8 @@ abstract contract MinteebleRandomizationConsumer is VRFV2WrapperConsumerBase {
         wrapperAddress = _wrapperAddress;
     }
 
+    function _onFulfillRandomWords(uint256 _requestId) internal virtual {}
+
     function fulfillRandomWords(
         uint256 _requestId,
         uint256[] memory _randomWords
@@ -48,6 +50,8 @@ abstract contract MinteebleRandomizationConsumer is VRFV2WrapperConsumerBase {
             _randomWords,
             s_requests[_requestId].paid
         );
+
+        _onFulfillRandomWords(_requestId);
 
         // for (uint256 i = 0; i < 20; ++i) {
         //     uint256 winnerId = (s_requests[_requestId].randomNumber) %

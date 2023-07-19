@@ -20,7 +20,7 @@ const expectThrowsAsync = async (method, errorMessage) => {
   }
 };
 
-describe("Test_MinteebleRandomizationConsumer", function () {
+describe.only("Test_MinteebleRandomizationConsumer", function () {
   let accounts = [];
 
   let VRFCoordinatorV2MockContract;
@@ -39,8 +39,8 @@ describe("Test_MinteebleRandomizationConsumer", function () {
   let VRFV2WrapperInstance;
   let deployVRFV2Wrapper = async () => { };
 
-  let nftToken;
-  let nftInstance;
+  let mrc;
+  let mrcInstance;
   let deployNft = async () => { };
 
   before(async () => {
@@ -49,13 +49,13 @@ describe("Test_MinteebleRandomizationConsumer", function () {
     LinkTokenContract = await ethers.getContractFactory("LinkToken");
     VRFV2WrapperContract = await ethers.getContractFactory("VRFV2Wrapper");
 
-    nftToken = await ethers.getContractFactory("Test_MinteebleRandomizationConsumer");
+    mrc = await ethers.getContractFactory("Test_MinteebleRandomizationConsumer");
 
     accounts = await ethers.getSigners();
 
 
     deployNft = async (linkAddress, wrapperAddress) => {
-      return await nftToken.deploy(linkAddress, wrapperAddress);
+      return await mrc.deploy(linkAddress, wrapperAddress);
     }
 
     deployVRFCoordinatorV2Mock = async () => {
@@ -91,9 +91,9 @@ describe("Test_MinteebleRandomizationConsumer", function () {
 
     await VRFCoordinatorV2MockInstance.fundSubscription("1", "10000000000000000000");
 
-    nftInstance = await deployNft(LinkTokenInstance.address, VRFV2WrapperInstance.address);
+    mrcInstance = await deployNft(LinkTokenInstance.address, VRFV2WrapperInstance.address);
 
-    await LinkTokenInstance.transfer(nftInstance.address, "10000000000000000000");
+    await LinkTokenInstance.transfer(mrcInstance.address, "10000000000000000000");
   };
 
   beforeEach(async () => {
@@ -109,10 +109,11 @@ describe("Test_MinteebleRandomizationConsumer", function () {
   it("Test random", async function () {
     await contractsDeployment();
 
-    let res = await nftInstance.getRandom(); await nftInstance.getRandom();
+    let res = await mrcInstance.getRandom();
     await (await VRFCoordinatorV2MockInstance.fulfillRandomWords("1", VRFV2WrapperInstance.address)).wait();
 
-    console.log("Res", await nftInstance.s_requests(1));
+    let res2 = await (await mrcInstance.getRandom()).wait();
+    console.log("Res", res, res2);
   });
 
 
