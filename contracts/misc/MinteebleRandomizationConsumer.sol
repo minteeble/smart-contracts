@@ -22,8 +22,8 @@ abstract contract MinteebleRandomizationConsumer is VRFV2WrapperConsumerBase {
 
     uint256[] public requestIds;
     uint256 public lastRequestId;
-    uint32 public gasLimit = 200000;
-    uint16 public requestConfirmations = 1;
+    uint32 public gasLimit = 300000;
+    uint16 public requestConfirmations = 3;
 
     address public linkAddress;
     address public wrapperAddress;
