@@ -20,7 +20,7 @@ const expectThrowsAsync = async (method, errorMessage) => {
   }
 };
 
-describe.only("Test_MinteebleRandomizationConsumer", function () {
+describe("Test_MinteebleRandomizationConsumer", function () {
   let accounts = [];
 
   let VRFCoordinatorV2MockContract;
