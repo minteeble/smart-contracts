@@ -15,4 +15,8 @@ contract Test_AccountActionTracker is AccountActionTracker {
     function setAccountEnabled(address _account, bool _enabled) public {
         _setAccountEnabled(_account, _enabled);
     }
+
+    function resetAccount(address _account) public {
+        _resetAccount(_account);
+    }
 }
