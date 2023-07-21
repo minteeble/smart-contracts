@@ -11,6 +11,7 @@ abstract contract AccountActionTracker {
     struct AccountInfo {
         uint256 actions; // Number of actions performed by the account.
         bool enabled; // Flag indicating whether tracking is enabled for the account.
+        mapping(uint256 => uint256) actionsBySignal;
     }
 
     /// @dev Flag indicating whether tracking is in manual mode.
@@ -30,14 +31,29 @@ abstract contract AccountActionTracker {
         return !trackingManualMode || accountInfo[_account].enabled;
     }
 
+    /// @notice Gets number of actions by accoutn and signal ID
+    /// @param _account The address of the account to check.
+    /// @param _signalId ID of the signal to read
+    function getTrackedActionsBySignal(address _account, uint256 _signalId)
+        public
+        view
+        returns (uint256)
+    {
+        return accountInfo[_account].actionsBySignal[_signalId];
+    }
+
     /// @dev Internal function to track an action performed by an account.
     /// @param _account The address of the account to track the action for.
-    function _trackActionToAccount(address _account) internal {
+    /// @param _signalId Id of the signal to track saction into
+    function _trackActionToAccount(address _account, uint256 _signalId)
+        internal
+    {
         require(
             isTrackedAccountEnabled(_account),
             "Tracked account is not enabled"
         );
         accountInfo[_account].actions += 1;
+        accountInfo[_account].actionsBySignal[_signalId] += 1;
     }
 
     /// @dev Internal function to reset an account's tracked actions and disable tracking for the account.

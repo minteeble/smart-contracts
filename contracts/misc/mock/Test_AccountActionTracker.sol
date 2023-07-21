@@ -4,8 +4,8 @@ pragma solidity ^0.8.14;
 import "../AccountActionTracker.sol";
 
 contract Test_AccountActionTracker is AccountActionTracker {
-    function trackActionToAccount(address _account) public {
-        _trackActionToAccount(_account);
+    function trackActionToAccount(address _account, uint256 _signalId) public {
+        _trackActionToAccount(_account, _signalId);
     }
 
     function setManualMode(bool _mode) public {
