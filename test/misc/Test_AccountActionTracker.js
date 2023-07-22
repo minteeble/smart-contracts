@@ -18,7 +18,7 @@ const expectThrowsAsync = async (method, errorMessage) => {
   }
 };
 
-describe.only("AccountActionTracker", function () {
+describe("AccountActionTracker", function () {
 
   let accounts = [];
   let trackerInstance;
