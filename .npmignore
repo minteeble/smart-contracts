@@ -1,0 +1,8 @@
+node_modules
+cache
+artifacts
+*.log
+.DS_STORE
+.env
+mock
+test
