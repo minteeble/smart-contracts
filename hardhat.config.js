@@ -6,13 +6,23 @@ dotenv.config();
 
 module.exports = {
   solidity: {
-    version: "0.8.14",
-    settings: {
-      optimizer: {
-        enabled: true,
-        runs: 200,
+    compilers: [{
+      version: "0.8.14",
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200,
+        },
       },
-    },
+    }, {
+      version: "0.4.26",
+      settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200,
+        },
+      },
+    },]
   },
   networks: {
     testnet: {
