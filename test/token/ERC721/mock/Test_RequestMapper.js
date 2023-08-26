@@ -19,7 +19,7 @@ const expectThrowsAsync = async (method, errorMessage) => {
   }
 };
 
-describe.only("RequestMapper", function () {
+describe("RequestMapper", function () {
 
   let accounts = [];
   let contractInstance;
