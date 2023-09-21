@@ -243,6 +243,7 @@ contract MinteebleERC721A is ERC721A, Ownable, ReentrancyGuard {
     function mintForAddress(address receiver, uint256 _mintAmount)
         public
         payable
+        virtual
         enoughFunds(_mintAmount)
         active
     {
