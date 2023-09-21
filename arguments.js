@@ -1,4 +1,4 @@
 module.exports = [
-  "Test2",
-  "T2",
-  "-"];
+  "T1",
+  "T1",
+  "A"];
