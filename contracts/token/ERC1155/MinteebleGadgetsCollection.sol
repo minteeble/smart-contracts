@@ -65,6 +65,21 @@ contract MinteebleGadgetsCollection is MinteebleERC1155 {
         gadgetGroups++;
     }
 
+    function _removeGadgetGroup() internal {
+        require(gadgetGroups > 0, "No available groups to remove");
+
+        require(
+            gadgetVariations[gadgetGroups - 1] == 0,
+            "Remove all variations first"
+        );
+
+        gadgetGroups--;
+    }
+
+    function removeGadgetGroup() public requireAdmin(msg.sender) {
+        _removeGadgetGroup();
+    }
+
     function addGadgetGroup() public requireAdmin(msg.sender) {
         _addGadgetGroup();
     }
@@ -99,6 +114,27 @@ contract MinteebleGadgetsCollection is MinteebleERC1155 {
 
     function addVariation(uint256 _groupId) public requireAdmin(msg.sender) {
         _addVariation(_groupId);
+    }
+
+    function addVariations(uint256 _groupId, uint256 _amount)
+        public
+        requireAdmin(msg.sender)
+    {
+        for (uint256 i = 0; i < _amount; i++) {
+            _addVariation(_groupId);
+        }
+    }
+
+    function removeVariation(uint256 _groupId) public requireAdmin(msg.sender) {
+        require(_groupId < gadgetGroups, "Invalid gadget Id");
+
+        require(
+            gadgetVariations[_groupId] > 0,
+            "No available variations to remove"
+        );
+
+        gadgetVariations[_groupId]--;
+        _removeId(_groupId * variationsPerGroup + gadgetVariations[_groupId]);
     }
 
     function getGadgetGroupVariations(uint256 _groupId)

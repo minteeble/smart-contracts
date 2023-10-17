@@ -94,14 +94,14 @@ describe("MinteebleDynamicCollection", function () {
     await gadgetsCollectionInstance.addGadgetGroup();
     await gadgetsCollectionInstance.addVariation(0);
 
-    await gadgetsCollectionInstance.mint(0, 1, { value: 0 });
-    await dynamicCollectionInstance.mint(1, { value: "1000000000000000" });
+    await gadgetsCollectionInstance.connect(accounts[1]).mint(0, 1, { value: 0 });
+    await dynamicCollectionInstance.connect(accounts[1]).mint(1, { value: "1000000000000000" });
 
-    await gadgetsCollectionInstance.setApprovalForAll(dynamicCollectionInstance.address, true)
-    await dynamicCollectionInstance.pairGadget(1, 0, 0);
+    await gadgetsCollectionInstance.connect(accounts[1]).setApprovalForAll(dynamicCollectionInstance.address, true)
+    await dynamicCollectionInstance.connect(accounts[1]).pairGadget(1, 0, 0);
 
     expect(await gadgetsCollectionInstance.balanceOf(dynamicCollectionInstance.address, 0)).to.equal(1);
-    expect(await dynamicCollectionInstance.ownerOf(1)).to.equal(accounts[0].address)
+    expect(await dynamicCollectionInstance.ownerOf(1)).to.equal(accounts[1].address)
     let itemInfo = await dynamicCollectionInstance.getItemInfo(1);
     expect(itemInfo.gadgets.length).to.equal(1);
     expect(itemInfo.gadgets[0]).to.equal(0);
