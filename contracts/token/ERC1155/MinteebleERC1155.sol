@@ -224,8 +224,58 @@ contract MinteebleERC1155 is
         return idsInfo[_getIdIndex(_id)].price;
     }
 
+    function batchMintPrice(uint256[] memory _ids)
+        public
+        view
+        returns (uint256[] memory)
+    {
+        uint256[] memory prices = new uint256[](_ids.length);
+
+        for (uint256 i = 0; i < _ids.length; i++) {
+            prices[i] = idsInfo[_getIdIndex(_ids[i])].price;
+        }
+
+        return prices;
+    }
+
+    function batchSetMintPrice(uint256[] memory _ids, uint256[] memory _prices)
+        public
+        requireAdmin(msg.sender)
+    {
+        require(_ids.length == _prices.length, "Invalid input");
+
+        for (uint256 i = 0; i < _ids.length; i++) {
+            setMintPrice(_ids[i], _prices[i]);
+        }
+    }
+
     function maxSupply(uint256 _id) public view returns (uint256) {
         return idsInfo[_getIdIndex(_id)].maxSupply;
+    }
+
+    function batchMaxSupply(uint256[] memory _ids)
+        public
+        view
+        returns (uint256[] memory)
+    {
+        uint256[] memory maxSupplies = new uint256[](_ids.length);
+
+        for (uint256 i = 0; i < _ids.length; i++) {
+            maxSupplies[i] = idsInfo[_getIdIndex(_ids[i])].maxSupply;
+        }
+
+        return maxSupplies;
+    }
+
+    function batchSetMaxSupply(uint256[] memory _ids, uint256[] memory _maxSupplies)
+        public
+        requireAdmin(msg.sender)
+    {
+        require(_ids.length == _maxSupplies.length, "Invalid input");
+
+        for (uint256 i = 0; i < _ids.length; i++) {
+            setMaxSupply(_ids[i], _maxSupplies[i]);
+        }
     }
 
     function mint(uint256 _id, uint256 _amount) public payable {

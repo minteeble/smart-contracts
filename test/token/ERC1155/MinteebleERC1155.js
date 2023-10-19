@@ -320,4 +320,112 @@ describe("MinteebleERC1155", function () {
 
     expect(await token.balanceOf(accounts[4].address, 8)).to.equal(0);
   })
+
+  it("Should batch read the mint prices", async () => {
+    let token = await deployToken();
+
+    await token.addId(8);
+    await token.setMintPrice(8, "1000000000000000");
+    await token.addId(9);
+    await token.setMintPrice(9, "1000000000000000");
+    await token.addId(10);
+    await token.setMintPrice(10, "4000000000000000");
+
+    let prices = await token.batchMintPrice([8, 9, 10]);
+
+    expect(prices[0]).to.equal("1000000000000000");
+    expect(prices[1]).to.equal("1000000000000000");
+    expect(prices[2]).to.equal("4000000000000000");
+  });
+
+  it("Should batch set the mint prices", async () => {
+    let token = await deployToken();
+
+    await token.addId(8);
+    await token.addId(9);
+    await token.addId(10);
+
+    await token.batchSetMintPrice([8, 9, 10], ["1000000000000000", "1000000000000000", "4000000000000000"]);
+
+    let prices = await token.batchMintPrice([8, 9, 10]);
+
+    expect(prices[0]).to.equal("1000000000000000");
+    expect(prices[1]).to.equal("1000000000000000");
+    expect(prices[2]).to.equal("4000000000000000");
+  });
+
+  it("Should throw exception when trying to batch set the mint prices with different lengths", async () => {
+    let token = await deployToken();
+
+    await token.addId(8);
+    await token.addId(9);
+    await token.addId(10);
+
+    await expectThrowsAsync(() => token.batchSetMintPrice([8, 9, 10], ["1000000000000000", "1000000000000000"]));
+  });
+
+  it("Should throw exception when trying to batch set the mint prices with different lengths", async () => {
+    let token = await deployToken();
+
+    await token.addId(8);
+    await token.addId(9);
+    await token.addId(10);
+
+    await expectThrowsAsync(() => token.batchSetMintPrice([8, 9, 10], ["1000000000000000", "1000000000000000"]));
+  });
+
+  it("Should batch read the max supplies", async () => {
+    let token = await deployToken();
+
+    await token.addId(8);
+    await token.setMaxSupply(8, 10000);
+    await token.addId(9);
+    await token.setMaxSupply(9, 10000);
+    await token.addId(10);
+    await token.setMaxSupply(10, 40000);
+
+    let supplies = await token.batchMaxSupply([8, 9, 10]);
+
+    expect(supplies[0]).to.equal(10000);
+    expect(supplies[1]).to.equal(10000);
+    expect(supplies[2]).to.equal(40000);
+  });
+
+  it("Should batch set the max supplies", async () => {
+    let token = await deployToken();
+
+    await token.addId(8);
+    await token.addId(9);
+    await token.addId(10);
+
+    await token.batchSetMaxSupply([8, 9, 10], [10000, 10000, 40000]);
+
+    let supplies = await token.batchMaxSupply([8, 9, 10]);
+
+    expect(supplies[0]).to.equal(10000);
+    expect(supplies[1]).to.equal(10000);
+    expect(supplies[2]).to.equal(40000);
+  });
+
+  it("Should throw exception when trying to batch set the max supplies with different lengths", async () => {
+    let token = await deployToken();
+
+    await token.addId(8);
+    await token.addId(9);
+    await token.addId(10);
+
+    await expectThrowsAsync(() => token.batchSetMaxSupply([8, 9, 10], [10000, 10000]));
+  });
+
+  it("Should throw exception when trying to batch set the max supplies with different lengths", async () => {
+    let token = await deployToken();
+
+    await token.addId(8);
+    await token.addId(9);
+    await token.addId(10);
+
+    await expectThrowsAsync(() => token.batchSetMaxSupply([8, 9, 10], [10000, 10000]));
+  });
+
+
 });
