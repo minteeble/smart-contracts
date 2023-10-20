@@ -59,7 +59,7 @@ contract MinteebleERC1155 is
     AccessControlEnumerable,
     ReentrancyGuard
 {
-    bool paused;
+    bool public paused;
     string public name;
     string public symbol;
 
