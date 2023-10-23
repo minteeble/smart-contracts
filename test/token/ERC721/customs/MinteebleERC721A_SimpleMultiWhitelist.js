@@ -124,7 +124,7 @@ describe("MinteebleERC721A_SimpleMultiWhitelist", function () {
     let wl = getWhitelistRoot([accounts[1].address, accounts[2].address]);
     await collectionInstance.createWhitelistGroup(0, wl.root, 1000000000000000);
 
-    console.log(wl.root);
+    // console.log(wl.root);
     await collectionInstance.setWhitelistPrice(0, 2000000000000000);
     expect(await collectionInstance.getWhitelistPrice(0)).to.equal("2000000000000000");
 

@@ -153,4 +153,30 @@ describe("MinteebleGadgetCollection", function () {
 
   });
 
+  it("Should throw exception if trying to remove variations with no gadgets groups available", async () => {
+    await expectThrowsAsync(() => token.removeVariation(0));
+  })
+
+  it("Should throw exception if trying to remove variations from a non-existent group", async () => {
+    await token.addGadgetGroup();
+    await token.addGadgetGroup();
+    await token.addGadgetGroup();
+
+    await expectThrowsAsync(() => token.removeVariation(3));
+    await expectThrowsAsync(() => token.removeVariation(4));
+
+  });
+
+  it("Should throw exception if trying to remove variations from a group with no variations", async () => {
+    await token.addGadgetGroup();
+
+    await expectThrowsAsync(() => token.removeVariation(0));
+  });
+
+  it("Should throw exception if trying to remove variations from a group with no variations", async () => {
+    await token.addGadgetGroup();
+
+    await expectThrowsAsync(() => token.removeVariation(0));
+  });
+
 });

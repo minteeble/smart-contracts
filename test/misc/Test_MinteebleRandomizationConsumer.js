@@ -115,7 +115,7 @@ describe("Test_MinteebleRandomizationConsumer", function () {
 
     // let res2 = await (await mrcInstance.getRandom()).wait();
     // console.log("Res", res);
-    console.log("Res", await mrcInstance.s_requests(1));
+    // console.log("Res", await mrcInstance.s_requests(1));
 
   });
 

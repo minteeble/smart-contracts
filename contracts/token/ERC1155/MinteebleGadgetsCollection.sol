@@ -19,20 +19,18 @@ interface IMinteebleGadgetsCollection is IMinteebleERC1155 {
 
     function getVariationsPerGroup() external view returns (uint256);
 
-    function tokenIdToGroupId(uint256 _id)
-        external
-        view
-        returns (uint256, uint256);
+    function tokenIdToGroupId(
+        uint256 _id
+    ) external view returns (uint256, uint256);
 
-    function groupIdToTokenId(uint256 _groupId, uint256 _variationId)
-        external
-        view
-        returns (uint256);
+    function groupIdToTokenId(
+        uint256 _groupId,
+        uint256 _variationId
+    ) external view returns (uint256);
 
-    function getGadgetGroupVariations(uint256 _groupId)
-        external
-        view
-        returns (uint256);
+    function getGadgetGroupVariations(
+        uint256 _groupId
+    ) external view returns (uint256);
 }
 
 contract MinteebleGadgetsCollection is MinteebleERC1155 {
@@ -84,19 +82,16 @@ contract MinteebleGadgetsCollection is MinteebleERC1155 {
         _addGadgetGroup();
     }
 
-    function tokenIdToGroupId(uint256 _id)
-        public
-        view
-        returns (uint256, uint256)
-    {
+    function tokenIdToGroupId(
+        uint256 _id
+    ) public view returns (uint256, uint256) {
         return (_id / variationsPerGroup, _id % variationsPerGroup);
     }
 
-    function groupIdToTokenId(uint256 _groupId, uint256 _variationId)
-        public
-        view
-        returns (uint256)
-    {
+    function groupIdToTokenId(
+        uint256 _groupId,
+        uint256 _variationId
+    ) public view returns (uint256) {
         return _groupId * variationsPerGroup + _variationId;
     }
 
@@ -116,10 +111,10 @@ contract MinteebleGadgetsCollection is MinteebleERC1155 {
         _addVariation(_groupId);
     }
 
-    function addVariations(uint256 _groupId, uint256 _amount)
-        public
-        requireAdmin(msg.sender)
-    {
+    function addVariations(
+        uint256 _groupId,
+        uint256 _amount
+    ) public requireAdmin(msg.sender) {
         for (uint256 i = 0; i < _amount; i++) {
             _addVariation(_groupId);
         }
@@ -137,23 +132,17 @@ contract MinteebleGadgetsCollection is MinteebleERC1155 {
         _removeId(_groupId * variationsPerGroup + gadgetVariations[_groupId]);
     }
 
-    function getGadgetGroupVariations(uint256 _groupId)
-        public
-        view
-        returns (uint256)
-    {
+    function getGadgetGroupVariations(
+        uint256 _groupId
+    ) public view returns (uint256) {
         require(_groupId >= 0 && _groupId < gadgetGroups, "Invalid group ID");
 
         return gadgetVariations[_groupId];
     }
 
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override returns (bool) {
         return
             interfaceId == type(IMinteebleGadgetsCollection).interfaceId ||
             super.supportsInterface(interfaceId);

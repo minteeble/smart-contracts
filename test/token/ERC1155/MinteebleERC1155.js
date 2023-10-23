@@ -427,5 +427,82 @@ describe("MinteebleERC1155", function () {
     await expectThrowsAsync(() => token.batchSetMaxSupply([8, 9, 10], [10000, 10000]));
   });
 
+  it("Should batch read the balances (balanceOfBatch)", async () => {
+    let token = await deployToken();
+
+    await token.addId(8);
+    await token.addId(9);
+    await token.addId(10);
+
+    await token.mint(8, 1, { value: "1000000000000000", from: accounts[0].address });
+    await token.mint(9, 1, { value: "1000000000000000", from: accounts[0].address });
+    await token.mint(10, 1, { value: "1000000000000000", from: accounts[0].address });
+
+    let balances = await token.balanceOfBatch([accounts[0].address, accounts[0].address, accounts[0].address], [8, 9, 10]);
+
+    expect(balances[0]).to.equal(1);
+    expect(balances[1]).to.equal(1);
+    expect(balances[2]).to.equal(1);
+  });
+
+  it("Should batch read the balances (balanceOfBatch) with different lengths", async () => {
+    let token = await deployToken();
+
+    await token.addId(8);
+    await token.addId(9);
+
+    await token.mint(8, 1, { value: "1000000000000000", from: accounts[0].address });
+    await token.mint(9, 1, { value: "1000000000000000", from: accounts[0].address });
+
+    let balances = await token.balanceOfBatch([accounts[0].address, accounts[0].address, accounts[0].address], [8, 9, 10]);
+
+    expect(balances[0]).to.equal(1);
+    expect(balances[1]).to.equal(1);
+    expect(balances[2]).to.equal(0);
+  });
+
+  it("Should revert mint if paused", async () => {
+    let token = await deployToken();
+
+    await token.addId(8);
+    await token.setPaused(true);
+
+    await expectThrowsAsync(() => token.mint(8, 1, { value: "0", from: accounts[0].address }));
+  });
+
+  it("Should revert mint if freeItemsBuyable is false and price is zero", async () => {
+    let token = await deployToken();
+
+    await token.addId(8);
+    await token.setFreeItemsBuyable(false);
+
+    await expectThrowsAsync(() => token.mint(8, 1, { value: "0", from: accounts[0].address }));
+    expect(await token.balanceOf(accounts[0].address, 8)).to.equal(0);
+  });
+
+  it("Should allow minter role to ownerMintForAddress if freeItemsBuyable is false and price is zero", async () => {
+    let token = await deployToken();
+
+    await token.addId(8);
+    await token.setFreeItemsBuyable(false);
+
+    await token.ownerMintForAddress(accounts[0].address, 8, 1);
+    expect(await token.balanceOf(accounts[0].address, 8)).to.equal(1);
+  });
+
+  it("Should revert ownerMintForAddress if freeItemsBuyable is false and price is zero and caller is not minter", async () => {
+    let token = await deployToken();
+
+    await token.addId(8);
+    await token.setFreeItemsBuyable(false);
+
+    await expectThrowsAsync(() => token.connect(accounts[1]).ownerMintForAddress(accounts[2].address, 8, 1));
+    expect(await token.balanceOf(accounts[2].address, 8)).to.equal(0);
+  });
+
+
+
+
+
 
 });

@@ -63,6 +63,8 @@ contract MinteebleERC1155 is
     string public name;
     string public symbol;
 
+    bool freeItemsBuyable;
+
     bytes4 public constant IMINTEEBLE_ERC1155_INTERFACE_ID =
         type(IMinteebleERC1155).interfaceId;
 
@@ -85,6 +87,7 @@ contract MinteebleERC1155 is
         name = _name;
         symbol = _symbol;
         paused = true;
+        freeItemsBuyable = true;
     }
 
     modifier requireAdmin(address _account) {
@@ -157,6 +160,12 @@ contract MinteebleERC1155 is
         _setURI(_newUri);
     }
 
+    function setFreeItemsBuyable(
+        bool _freeItemsBuyable
+    ) public requireAdmin(msg.sender) {
+        freeItemsBuyable = _freeItemsBuyable;
+    }
+
     function ownerMintForAddress(
         address _recipientAccount,
         uint256 _id,
@@ -181,6 +190,11 @@ contract MinteebleERC1155 is
                 }
 
                 require(
+                    idsInfo[i].price != 0 || freeItemsBuyable,
+                    "Not for sale"
+                );
+
+                require(
                     msg.value >= idsInfo[i].price * _amount,
                     "Insufficient funds"
                 );
@@ -190,28 +204,26 @@ contract MinteebleERC1155 is
         }
     }
 
-    function airdrop(uint256 _id, address[] memory _accounts)
-        public
-        requireAdmin(msg.sender)
-        idExists(_id)
-        nonReentrant
-    {
+    function airdrop(
+        uint256 _id,
+        address[] memory _accounts
+    ) public requireAdmin(msg.sender) idExists(_id) nonReentrant {
         for (uint256 i; i < _accounts.length; i++) {
             _mint(_accounts[i], _id, 1, "");
         }
     }
 
-    function setMintPrice(uint256 _id, uint256 _price)
-        public
-        requireAdmin(msg.sender)
-    {
+    function setMintPrice(
+        uint256 _id,
+        uint256 _price
+    ) public requireAdmin(msg.sender) {
         idsInfo[_getIdIndex(_id)].price = _price;
     }
 
-    function setMaxSupply(uint256 _id, uint256 _maxSupply)
-        public
-        requireAdmin(msg.sender)
-    {
+    function setMaxSupply(
+        uint256 _id,
+        uint256 _maxSupply
+    ) public requireAdmin(msg.sender) {
         require(
             _maxSupply > totalSupply(_id),
             "Max supply can not be less than total supply."
@@ -224,11 +236,9 @@ contract MinteebleERC1155 is
         return idsInfo[_getIdIndex(_id)].price;
     }
 
-    function batchMintPrice(uint256[] memory _ids)
-        public
-        view
-        returns (uint256[] memory)
-    {
+    function batchMintPrice(
+        uint256[] memory _ids
+    ) public view returns (uint256[] memory) {
         uint256[] memory prices = new uint256[](_ids.length);
 
         for (uint256 i = 0; i < _ids.length; i++) {
@@ -238,10 +248,10 @@ contract MinteebleERC1155 is
         return prices;
     }
 
-    function batchSetMintPrice(uint256[] memory _ids, uint256[] memory _prices)
-        public
-        requireAdmin(msg.sender)
-    {
+    function batchSetMintPrice(
+        uint256[] memory _ids,
+        uint256[] memory _prices
+    ) public requireAdmin(msg.sender) {
         require(_ids.length == _prices.length, "Invalid input");
 
         for (uint256 i = 0; i < _ids.length; i++) {
@@ -253,11 +263,9 @@ contract MinteebleERC1155 is
         return idsInfo[_getIdIndex(_id)].maxSupply;
     }
 
-    function batchMaxSupply(uint256[] memory _ids)
-        public
-        view
-        returns (uint256[] memory)
-    {
+    function batchMaxSupply(
+        uint256[] memory _ids
+    ) public view returns (uint256[] memory) {
         uint256[] memory maxSupplies = new uint256[](_ids.length);
 
         for (uint256 i = 0; i < _ids.length; i++) {
@@ -267,10 +275,10 @@ contract MinteebleERC1155 is
         return maxSupplies;
     }
 
-    function batchSetMaxSupply(uint256[] memory _ids, uint256[] memory _maxSupplies)
-        public
-        requireAdmin(msg.sender)
-    {
+    function batchSetMaxSupply(
+        uint256[] memory _ids,
+        uint256[] memory _maxSupplies
+    ) public requireAdmin(msg.sender) {
         require(_ids.length == _maxSupplies.length, "Invalid input");
 
         for (uint256 i = 0; i < _ids.length; i++) {
@@ -298,7 +306,9 @@ contract MinteebleERC1155 is
         require(success);
     }
 
-    function supportsInterface(bytes4 interfaceId)
+    function supportsInterface(
+        bytes4 interfaceId
+    )
         public
         view
         virtual
