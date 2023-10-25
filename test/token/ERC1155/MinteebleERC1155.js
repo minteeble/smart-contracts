@@ -20,7 +20,7 @@ const expectThrowsAsync = async (method, errorMessage) => {
   }
 };
 
-describe.only("MinteebleERC1155", function () {
+describe("MinteebleERC1155", function () {
   let refInterface;
 
   let accounts = [];
