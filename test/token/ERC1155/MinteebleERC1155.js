@@ -20,7 +20,7 @@ const expectThrowsAsync = async (method, errorMessage) => {
   }
 };
 
-describe("MinteebleERC1155", function () {
+describe.only("MinteebleERC1155", function () {
   let refInterface;
 
   let accounts = [];
@@ -501,6 +501,112 @@ describe("MinteebleERC1155", function () {
   });
 
 
+  it("Should correctly mintBatchForAddress", async () => {
+    let token = await deployToken();
+
+    await token.addId(8);
+    await token.addId(9);
+    await token.addId(10);
+
+    await token.mintBatchForAddress(accounts[0].address, [8, 9, 10], [1, 1, 1], { value: "3000000000000000", from: accounts[0].address });
+
+    expect(await token.balanceOf(accounts[0].address, 8)).to.equal(1);
+    expect(await token.balanceOf(accounts[0].address, 9)).to.equal(1);
+    expect(await token.balanceOf(accounts[0].address, 10)).to.equal(1);
+  });
+
+  it("Should revert mintBatchForAddress if paused", async () => {
+    let token = await deployToken();
+
+    await token.addId(8);
+    await token.addId(9);
+    await token.addId(10);
+    await token.setPaused(true);
+
+    await expectThrowsAsync(() => token.mintBatchForAddress(accounts[0].address, [8, 9, 10], [1, 1, 1], { value: "3000000000000000", from: accounts[0].address }));
+  });
+
+  it("Should revert mintBatchForAddress if freeItemsBuyable is false and price is zero", async () => {
+    let token = await deployToken();
+
+    await token.addId(8);
+    await token.addId(9);
+    await token.addId(10);
+    await token.setFreeItemsBuyable(false);
+
+    await expectThrowsAsync(() => token.mintBatchForAddress(accounts[0].address, [8, 9, 10], [1, 1, 1], { value: "0", from: accounts[0].address }));
+    expect(await token.balanceOf(accounts[0].address, 8)).to.equal(0);
+    expect(await token.balanceOf(accounts[0].address, 9)).to.equal(0);
+    expect(await token.balanceOf(accounts[0].address, 10)).to.equal(0);
+  });
+
+  it("Should allow minter role to ownerMintBatchForAddress if freeItemsBuyable is false and price is zero", async () => {
+    let token = await deployToken();
+
+    await token.addId(8);
+    await token.addId(9);
+    await token.addId(10);
+    await token.setFreeItemsBuyable(false);
+
+    await token.ownerMintBatchForAddress(accounts[0].address, [8, 9, 10], [1, 1, 1]);
+    expect(await token.balanceOf(accounts[0].address, 8)).to.equal(1);
+    expect(await token.balanceOf(accounts[0].address, 9)).to.equal(1);
+    expect(await token.balanceOf(accounts[0].address, 10)).to.equal(1);
+  });
+
+  it("Should revert ownerMintBatchForAddress if caller is not minter", async () => {
+    let token = await deployToken();
+
+    await token.addId(8);
+    await token.addId(9);
+    await token.addId(10);
+    await token.setFreeItemsBuyable(false);
+
+    await expectThrowsAsync(() => token.connect(accounts[1]).ownerMintBatchForAddress(accounts[0].address, [8, 9, 10], [1, 1, 1]));
+    expect(await token.balanceOf(accounts[0].address, 8)).to.equal(0);
+    expect(await token.balanceOf(accounts[0].address, 9)).to.equal(0);
+    expect(await token.balanceOf(accounts[0].address, 10)).to.equal(0);
+  });
+
+  it("Should revert mintBatchForAddress if price is not correct", async () => {
+    let token = await deployToken();
+
+    await token.addId(8);
+    await token.addId(9);
+    await token.addId(10);
+    await token.setMintPrice(8, "1000000000000000");
+    await token.setMintPrice(9, "1000000000000000");
+    await token.setMintPrice(10, "1000000000000000");
+
+    await expectThrowsAsync(() => token.mintBatchForAddress(accounts[0].address, [8, 9, 10], [1, 1, 1], { value: "2900000000000000", from: accounts[0].address }));
+  });
+
+  it("Should revert mintBatchForAddress if ids and amounts are not the same length", async () => {
+    let token = await deployToken();
+
+    await token.addId(8);
+    await token.addId(9);
+
+    await expectThrowsAsync(() => token.mintBatchForAddress(accounts[0].address, [8, 9, 10], [1, 1], { value: "2900000000000000", from: accounts[0].address }));
+  });
+
+  it("Should revert mintBatchForAddress if ids and amounts are not the same length", async () => {
+    let token = await deployToken();
+
+    await token.addId(8);
+    await token.addId(9);
+
+    await expectThrowsAsync(() => token.mintBatchForAddress(accounts[0].address, [8, 9, 10], [1, 1], { value: "2900000000000000", from: accounts[0].address }));
+  });
+
+  it("Should revert mintBatchForAddress if ids and amounts are not the same length", async () => {
+    let token = await deployToken();
+
+    await token.addId(8);
+    await token.addId(9);
+
+    await expectThrowsAsync(() => token.mintBatchForAddress(accounts[0].address, [8, 9, 10], [1, 1], { value: "2900000000000000", from: accounts[0].address }));
+  });
 
 
 

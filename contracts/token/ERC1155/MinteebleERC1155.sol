@@ -175,6 +175,15 @@ contract MinteebleERC1155 is
         _mint(_recipientAccount, _id, _amount, "");
     }
 
+    function ownerMintBatchForAddress(
+        address _recipientAccount,
+        uint256[] memory _ids,
+        uint256[] memory _amounts
+    ) public nonReentrant {
+        require(hasRole(MINTER_ROLE, msg.sender), "Minter role required.");
+        _mintBatch(_recipientAccount, _ids, _amounts, "");
+    }
+
     function mintForAddress(
         address _recipientAccount,
         uint256 _id,
@@ -202,6 +211,41 @@ contract MinteebleERC1155 is
                 _mint(_recipientAccount, _id, _amount, "");
             }
         }
+    }
+
+    function mintBatchForAddress(
+        address _recipientAccount,
+        uint256[] memory _ids,
+        uint256[] memory _amounts
+    ) public payable active nonReentrant {
+        require(_ids.length == _amounts.length, "Invalid input");
+
+        uint256 totalCost;
+
+        for (uint256 i = 0; i < _ids.length; i++) {
+            for (uint256 j = 0; j < idsInfo.length; j++) {
+                if (idsInfo[j].id == _ids[i]) {
+                    if (idsInfo[j].maxSupply != 0) {
+                        require(
+                            totalSupply(_ids[i]) + _amounts[i] <=
+                                idsInfo[j].maxSupply,
+                            "Max supply reached"
+                        );
+                    }
+
+                    require(
+                        idsInfo[j].price != 0 || freeItemsBuyable,
+                        "Not for sale"
+                    );
+
+                    totalCost += idsInfo[j].price * _amounts[i];
+                }
+            }
+        }
+
+        require(msg.value >= totalCost, "Insufficient funds");
+
+        _mintBatch(_recipientAccount, _ids, _amounts, "");
     }
 
     function airdrop(
