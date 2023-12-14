@@ -4,6 +4,8 @@ const dotenv = require("dotenv");
 
 dotenv.config();
 
+let privateKeyPlaceHolder = "0x0000000000000000000000000000000000000000000000000000000000000000";
+
 module.exports = {
   solidity: {
     compilers: [{
@@ -26,15 +28,15 @@ module.exports = {
   },
   networks: {
     testnet: {
-      url: process.env.TESTNET_URL,
-      accounts: [process.env.TESTNET_ACCOUNT],
+      url: process.env.TESTNET_URL || "",
+      accounts: [process.env.TESTNET_ACCOUNT || privateKeyPlaceHolder],
     },
     mainnet: {
-      url: process.env.MAINNET_URL,
-      accounts: [process.env.MAINNET_ACCOUNT],
+      url: process.env.MAINNET_URL || "",
+      accounts: [process.env.MAINNET_ACCOUNT || privateKeyPlaceHolder],
     },
   },
   etherscan: {
-    apiKey: process.env.ETHERSCAN_KEY,
+    apiKey: process.env.ETHERSCAN_KEY || "",
   },
 };
