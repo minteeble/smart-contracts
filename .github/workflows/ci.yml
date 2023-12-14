@@ -1,0 +1,30 @@
+name: Publish
+
+on: push
+
+jobs:
+  ci:
+    name: ci
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [16.x]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Installing dependencies
+        uses: borales/actions-yarn@v3.0.0
+        with:
+          cmd: install
+
+      - name: Build
+        run: yarn compile
+
+      - name: Run tests
+        run: yarn test

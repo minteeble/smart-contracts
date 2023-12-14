@@ -188,7 +188,7 @@ contract MinteebleERC1155 is
         address _recipientAccount,
         uint256 _id,
         uint256 _amount
-    ) public payable idExists(_id) active nonReentrant {
+    ) public payable virtual idExists(_id) active nonReentrant {
         for (uint256 i = 0; i < idsInfo.length; i++) {
             if (idsInfo[i].id == _id) {
                 if (idsInfo[i].maxSupply != 0) {
@@ -217,7 +217,7 @@ contract MinteebleERC1155 is
         address _recipientAccount,
         uint256[] memory _ids,
         uint256[] memory _amounts
-    ) public payable active nonReentrant {
+    ) public payable virtual active nonReentrant {
         require(_ids.length == _amounts.length, "Invalid input");
 
         uint256 totalCost;
