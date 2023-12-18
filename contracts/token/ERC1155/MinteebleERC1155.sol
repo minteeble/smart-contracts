@@ -170,7 +170,7 @@ contract MinteebleERC1155 is
         address _recipientAccount,
         uint256 _id,
         uint256 _amount
-    ) public idExists(_id) nonReentrant {
+    ) public virtual idExists(_id) nonReentrant {
         require(hasRole(MINTER_ROLE, msg.sender), "Minter role required.");
         _mint(_recipientAccount, _id, _amount, "");
     }
